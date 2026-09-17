@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>코드블록 퀘스트</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <header><p class="eyebrow">SPRING AI LAB</p><h1>코드블록 퀘스트</h1><p>AI가 만든 알고리즘 코드의 빈칸을 완성해 보세요.</p></header>
+  <section class="controls card">
+    <label>문제 유형<select id="category"><option>전체</option><option>Greedy</option><option>DP</option><option>BFS</option><option>DFS</option></select></label>
+    <label>난이도<select id="difficulty"><option>쉬움</option><option>보통</option><option>어려움</option></select></label>
+    <button id="generate">새 문제 생성</button>
+  </section>
+  <p id="status">문제 유형과 난이도를 선택해 시작하세요.</p>
+  <section id="quiz" class="quiz hidden">
+    <article class="card"><h2 id="title"></h2><p id="description"></p><div id="tests"></div><h3>빈칸 코드</h3><pre><code id="blankCode"></code></pre></article>
+    <aside class="card"><h2>정답 선택</h2><p>빈칸 순서대로 블록을 선택하세요.</p><div id="answers"></div><button id="check">정답 확인</button><div id="result"></div><details><summary>정답 코드 보기</summary><pre><code id="answerCode"></code></pre></details></aside>
+  </section>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>
