@@ -4,7 +4,6 @@ import com.algopoolja.quiz.domain.TestCase;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
-import java.util.UUID;
 
 public final class QuizDtos {
     private QuizDtos() {}
@@ -12,7 +11,7 @@ public final class QuizDtos {
     public record GenerateRequest(@NotBlank String category, @NotBlank String difficulty) {}
 
     public record GenerateResponse(
-            UUID quizId,
+            Long quizId,
             String title,
             String description,
             List<TestCase> testcases,

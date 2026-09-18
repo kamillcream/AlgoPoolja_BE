@@ -6,7 +6,6 @@ import com.algopoolja.quiz.api.QuizDtos.GenerateRequest;
 import com.algopoolja.quiz.api.QuizDtos.GenerateResponse;
 import com.algopoolja.quiz.service.QuizService;
 import jakarta.validation.Valid;
-import java.util.UUID;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,7 +25,7 @@ public class QuizController {
     }
 
     @PostMapping("/{quizId}/check")
-    public CheckResponse check(@PathVariable UUID quizId, @Valid @RequestBody CheckRequest request) {
+    public CheckResponse check(@PathVariable Long quizId, @Valid @RequestBody CheckRequest request) {
         return service.check(quizId, request.answers());
     }
 }
