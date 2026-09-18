@@ -63,8 +63,8 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
         return chatClient.prompt()
                 .system("""
                         원본 코드와 빈칸 코드를 비교해 각 <BLANK>의 정확한 코드 조각을 순서대로 찾으세요.
-                        correct_answers에는 빈칸 수와 같은 개수의 정답만 넣으세요.
-                        wrong_answers에는 비슷하지만 틀린 코드 조각을 3~6개 넣으세요.
+                        correctAnswers에는 빈칸 수와 같은 개수의 정답만 넣으세요.
+                        wrongAnswers에는 비슷하지만 틀린 코드 조각을 3~6개 넣으세요.
                         모든 항목은 설명 없는 코드 조각이어야 합니다.
                         """)
                 .user("[원본 정답 코드]\n" + answerCode + "\n\n[빈칸 코드]\n" + blankCode)
