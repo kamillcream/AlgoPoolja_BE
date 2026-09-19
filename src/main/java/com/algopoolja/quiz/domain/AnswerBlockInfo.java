@@ -1,9 +1,16 @@
 package com.algopoolja.quiz.domain;
 
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public record AnswerBlockInfo(
-        List<String> correctAnswers,
-        List<String> wrongAnswers
-) {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class AnswerBlockInfo {
+    private List<String> correctAnswers;
+    private List<String> wrongAnswers;
 }

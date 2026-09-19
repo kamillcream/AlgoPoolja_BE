@@ -24,13 +24,19 @@ export OPENAI_MODEL="gpt-4o-mini" # 생략 가능
 ## API
 
 - `POST /api/quizzes`: `{ "category": "DP", "difficulty": "보통" }`
-- `POST /api/quizzes/{quizId}/check`: `{ "answers": ["..."] }`
+- `GET /api/quizzes/{quizId}`: 기존 문제 재조회
+- `POST /api/quizzes/{quizId}/check`: `{ "answers": ["..."], "startedAt": "2026-09-19T21:38:56+09:00" }`
+- `GET /api/dashboard/summary`: 대시보드 통계, 최근 풀이, 복습 문제 통합 조회
+- `GET /api/me/quiz-attempts`: 풀이 기록 페이지네이션 및 필터
+- `GET /api/me/wrong-quizzes`: 오답·복습 문제 페이지네이션 및 필터
 
-생성 결과는 현재 서버 메모리에 저장됩니다. 운영 환경에서 다중 인스턴스로 실행하려면 `QuizService`의 저장소를 Redis나 DB 구현으로 교체하세요.
+학습 API는 로그인 세션의 `userId`·`nickname` 또는 HS256 Bearer JWT의 `userId`·`nickname` claim으로 사용자를 식별합니다. JWT 사용 시 충분히 긴 `JWT_SECRET` 환경변수를 설정해야 합니다.
+
+생성 결과와 풀이 이력은 현재 서버 메모리에 저장되며 애플리케이션 재시작 시 초기화됩니다. 운영 환경에서는 `LearningStore`와 퀴즈 저장 부분을 영속 저장소 구현으로 교체해야 합니다.
 
 ## 원본과의 대응
 
-- Pydantic 구조화 출력 → Java record + `ChatClient.entity(...)`
+- Pydantic 구조화 출력 → Lombok DTO + `ChatClient.entity(...)`
 - LangChain OpenAI 모델 → Spring AI OpenAI starter
 - LangChain Tool → Spring AI `@Tool`
 - `create_agent()` → 도구가 기본 등록된 Spring AI `ChatClient`

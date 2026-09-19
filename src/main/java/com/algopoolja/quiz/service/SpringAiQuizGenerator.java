@@ -5,16 +5,14 @@ import com.algopoolja.quiz.domain.ProblemInfo;
 import com.algopoolja.quiz.domain.UserProblem;
 import java.time.LocalDateTime;
 import java.util.concurrent.ThreadLocalRandom;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class SpringAiQuizGenerator implements AiQuizGenerator {
     private final ChatClient chatClient;
-
-    public SpringAiQuizGenerator(ChatClient quizChatClient) {
-        this.chatClient = quizChatClient;
-    }
 
     @Override
     public ProblemInfo createProblem(String category, String difficulty) {
@@ -55,7 +53,7 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                 .user("다음 코드에 빈칸을 만드세요.\n\n" + answerCode)
                 .call()
                 .entity(UserProblem.class, spec -> spec.useProviderStructuredOutput().validateSchema());
-        return result.problem();
+        return result.getProblem();
     }
 
     @Override

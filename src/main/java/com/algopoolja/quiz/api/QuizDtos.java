@@ -4,26 +4,87 @@ import com.algopoolja.quiz.domain.TestCase;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
+import java.time.OffsetDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 public final class QuizDtos {
     private QuizDtos() {}
 
-    public record GenerateRequest(@NotBlank String category, @NotBlank String difficulty) {}
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GenerateRequest {
+        @NotBlank
+        private String category;
+        @NotBlank
+        private String difficulty;
+    }
 
-    public record GenerateResponse(
-            Long quizId,
-            String title,
-            String description,
-            List<TestCase> testcases,
-            String blankCode,
-            List<String> answerBlocks,
-            int blankCount,
-            String answerCode
-    ) {}
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GenerateResponse {
+        private Long quizId;
+        private String title;
+        private String description;
+        private List<TestCase> testcases;
+        private String blankCode;
+        private List<String> answerBlocks;
+        private int blankCount;
+        private String answerCode;
+    }
 
-    public record CheckRequest(@NotEmpty List<@NotBlank String> answers) {}
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class QuizDetailResponse {
+        private Long quizId;
+        private String title;
+        private String description;
+        private String category;
+        private String difficulty;
+        private List<TestCase> testcases;
+        private String blankCode;
+        private List<String> answerBlocks;
+        private int blankCount;
+    }
 
-    public record CheckResponse(boolean correct, String message, String completedCode) {}
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CheckRequest {
+        @NotEmpty
+        private List<@NotBlank String> answers;
+        private OffsetDateTime startedAt;
+    }
 
-    public record ErrorResponse(String message) {}
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CheckResponse {
+        private Long attemptId;
+        private boolean correct;
+        private String message;
+        private int attemptNumber;
+        private Long durationSeconds;
+        private OffsetDateTime attemptedAt;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ErrorResponse {
+        private String code;
+        private String message;
+        private OffsetDateTime timestamp;
+    }
 }

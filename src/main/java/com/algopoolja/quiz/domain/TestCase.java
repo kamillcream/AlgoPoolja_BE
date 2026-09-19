@@ -1,4 +1,15 @@
 package com.algopoolja.quiz.domain;
 
-public record TestCase(String input, String output) {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class TestCase {
+    private String input;
+    private String output;
 }

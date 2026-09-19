@@ -5,39 +5,32 @@ import com.algopoolja.quiz.api.QuizDtos.GenerateResponse;
 import com.algopoolja.quiz.domain.AnswerBlockInfo;
 import com.algopoolja.quiz.domain.ProblemInfo;
 import com.algopoolja.quiz.domain.TestCase;
-import com.algopoolja.quiz.persistence.QuizJdbcRepository;
+import com.algopoolja.quiz.domain.QuizSnapshot;
+import com.algopoolja.quiz.learning.LearningStore;
+import com.algopoolja.quiz.learning.UserIdentity;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class QuizService {
     private static final Set<String> CATEGORIES = Set.of("전체", "Greedy", "DP", "BFS", "DFS");
     private static final Set<String> DIFFICULTIES = Set.of("쉬움", "보통", "어려움");
 
     private final AiQuizGenerator generator;
     private final QuizTools tools;
-    private final QuizJdbcRepository repository;
+    private final LearningStore learningStore;
     private final Map<Long, StoredQuiz> localQuizzes = new ConcurrentHashMap<>();
     private final AtomicLong localSequence = new AtomicLong();
-
-    @Autowired
-    public QuizService(AiQuizGenerator generator, QuizTools tools, QuizJdbcRepository repository) {
-        this.generator = generator;
-        this.tools = tools;
-        this.repository = repository;
-    }
-
-    // Keeps the service unit-testable without a database.
-    public QuizService(AiQuizGenerator generator, QuizTools tools) {
-        this.generator = generator;
-        this.tools = tools;
-        this.repository = null;
-    }
 
     public GenerateResponse generate(String category, String difficulty) {
         if (!CATEGORIES.contains(category)) throw new IllegalArgumentException("지원하지 않는 문제 유형입니다.");
@@ -45,59 +38,86 @@ public class QuizService {
 
         ProblemInfo problem = generator.createProblem(category, difficulty);
         requireValidProblem(problem);
-        String blankCode = generator.createBlankCode(problem.code());
-        AnswerBlockInfo blocks = generator.createAnswerBlocks(problem.code(), blankCode);
-        String validation = tools.validateBlankCount(blankCode, blocks.correctAnswers());
+        String blankCode = generator.createBlankCode(problem.getCode());
+        AnswerBlockInfo blocks = generator.createAnswerBlocks(problem.getCode(), blankCode);
+        String validation = tools.validateBlankCount(blankCode, blocks.getCorrectAnswers());
         if (!"OK".equals(validation)) throw new QuizGenerationException(validation);
 
-        List<String> choices = tools.buildChoiceBlocks(blocks.correctAnswers(), blocks.wrongAnswers());
-        List<TestCase> testCases = problem.testcases().stream()
-                .map(test -> new TestCase(tools.cleanTestcaseText(test.input()), tools.cleanTestcaseText(test.output())))
+        List<String> choices = tools.buildChoiceBlocks(blocks.getCorrectAnswers(), blocks.getWrongAnswers());
+        List<TestCase> testCases = problem.getTestcases().stream()
+                .map(test -> new TestCase(tools.cleanTestcaseText(test.getInput()), tools.cleanTestcaseText(test.getOutput())))
                 .toList();
 
-        long id;
-        if (repository != null) {
-            id = repository.saveQuiz(problem.title(), problem.description(), category, difficulty,
-                    problem.code(), blankCode, blocks.correctAnswers(), choices, testCases);
-        }
-        else {
-            id = localSequence.incrementAndGet();
-            localQuizzes.put(id, new StoredQuiz(problem.code(), blankCode, List.copyOf(blocks.correctAnswers())));
-        }
-        return new GenerateResponse(id, problem.title(), problem.description(), testCases, blankCode,
-                choices, blocks.correctAnswers().size(), problem.code());
+        long id = localSequence.incrementAndGet();
+        localQuizzes.put(id, new StoredQuiz(id, problem.getTitle(), problem.getDescription(), normalizeCategory(category),
+                normalizeDifficulty(difficulty), testCases, problem.getCode(), blankCode,
+                List.copyOf(blocks.getCorrectAnswers()), choices));
+        return new GenerateResponse(id, problem.getTitle(), problem.getDescription(), testCases, blankCode,
+                choices, blocks.getCorrectAnswers().size(), problem.getCode());
     }
 
-    public CheckResponse check(Long id, List<String> answers) {
+    public CheckResponse check(Long id, List<String> answers, OffsetDateTime startedAt, UserIdentity user) {
         StoredQuiz quiz = findQuiz(id);
         if (quiz == null) throw new QuizNotFoundException();
-        if (answers.size() != quiz.correctAnswers().size()) {
-            return new CheckResponse(false, "빈칸 %d개를 모두 선택해주세요.".formatted(quiz.correctAnswers().size()), null);
+        if (answers.size() != quiz.getCorrectAnswers().size()) {
+            throw new IllegalArgumentException("빈칸 %d개를 모두 선택해주세요.".formatted(quiz.getCorrectAnswers().size()));
         }
-        String completed = quiz.blankCode();
+        String completed = quiz.getBlankCode();
         for (String answer : answers) {
             completed = completed.replaceFirst("<BLANK>", java.util.regex.Matcher.quoteReplacement(answer));
         }
-        boolean correct = answers.equals(quiz.correctAnswers()) || completed.strip().equals(quiz.answerCode().strip());
-        if (repository != null) repository.saveAttempt(id, answers, correct);
-        return new CheckResponse(correct,
-                correct ? "정답입니다. 선택한 블록이 원본 코드와 일치합니다." : "다시 확인해보세요. 원본 코드와 일치하지 않습니다.",
-                completed);
+        boolean correct = answers.equals(quiz.getCorrectAnswers()) || completed.strip().equals(quiz.getAnswerCode().strip());
+        var attempt = learningStore.saveAttempt(user, id, answers, correct, startedAt,
+                OffsetDateTime.now(ZoneId.of("Asia/Seoul")));
+        return new CheckResponse(attempt.getAttemptId(), correct,
+                correct ? "정답입니다." : "다시 확인해보세요.", attempt.getAttemptNumber(),
+                attempt.getDurationSeconds(), attempt.getAttemptedAt());
+    }
+
+    public QuizSnapshot getQuiz(Long id) {
+        StoredQuiz quiz = findQuiz(id);
+        if (quiz == null) throw new QuizNotFoundException();
+        return new QuizSnapshot(quiz.getQuizId(), quiz.getTitle(), quiz.getDescription(), quiz.getCategory(),
+                quiz.getDifficulty(), quiz.getTestcases(), quiz.getAnswerCode(), quiz.getBlankCode(),
+                quiz.getCorrectAnswers(), quiz.getAnswerBlocks());
     }
 
     private StoredQuiz findQuiz(long id) {
-        if (repository == null) return localQuizzes.get(id);
-        return repository.findQuiz(id)
-                .map(saved -> new StoredQuiz(saved.answerCode(), saved.blankCode(), saved.correctAnswers()))
-                .orElse(null);
+        return localQuizzes.get(id);
+    }
+
+    private String normalizeCategory(String value) {
+        return "전체".equals(value) ? "ETC" : value.toUpperCase();
+    }
+
+    private String normalizeDifficulty(String value) {
+        return switch (value) {
+            case "쉬움" -> "EASY";
+            case "보통" -> "NORMAL";
+            case "어려움" -> "HARD";
+            default -> value.toUpperCase();
+        };
     }
 
     private void requireValidProblem(ProblemInfo problem) {
-        if (problem == null || problem.title() == null || problem.description() == null || problem.code() == null
-                || problem.testcases() == null || problem.testcases().size() < 2) {
+        if (problem == null || problem.getTitle() == null || problem.getDescription() == null || problem.getCode() == null
+                || problem.getTestcases() == null || problem.getTestcases().size() < 2) {
             throw new QuizGenerationException("AI가 유효한 문제 또는 테스트케이스를 생성하지 못했습니다.");
         }
     }
 
-    private record StoredQuiz(String answerCode, String blankCode, List<String> correctAnswers) {}
+    @Getter
+    @AllArgsConstructor
+    private static class StoredQuiz {
+        private Long quizId;
+        private String title;
+        private String description;
+        private String category;
+        private String difficulty;
+        private List<TestCase> testcases;
+        private String answerCode;
+        private String blankCode;
+        private List<String> correctAnswers;
+        private List<String> answerBlocks;
+    }
 }
