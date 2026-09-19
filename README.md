@@ -14,6 +14,24 @@ export OPENAI_MODEL="gpt-4o-mini" # 생략 가능
 
 브라우저에서 `http://localhost:8080`을 엽니다.
 
+### Google OAuth
+
+Google Cloud Console에서 OAuth 2.0 웹 클라이언트를 만들고 승인된 리디렉션 URI로 다음 주소를 등록합니다.
+
+```text
+http://localhost:8080/login/oauth2/code/google
+```
+
+백엔드 실행 전에 클라이언트 정보와 로그인 성공 후 돌아갈 프론트 주소를 설정합니다.
+
+```bash
+export GOOGLE_CLIENT_ID="your-client-id"
+export GOOGLE_CLIENT_SECRET="your-client-secret"
+export FRONTEND_URL="http://localhost:5173"
+```
+
+로그인 시작 경로는 `/oauth2/authorization/google`, 현재 사용자 조회는 `GET /api/auth/me`, 로그아웃은 `POST /api/auth/logout`입니다.
+
 테스트와 실행 JAR 생성은 다음 명령을 사용합니다.
 
 ```bash
@@ -29,6 +47,8 @@ export OPENAI_MODEL="gpt-4o-mini" # 생략 가능
 - `GET /api/dashboard/summary`: 대시보드 통계, 최근 풀이, 복습 문제 통합 조회
 - `GET /api/me/quiz-attempts`: 풀이 기록 페이지네이션 및 필터
 - `GET /api/me/wrong-quizzes`: 오답·복습 문제 페이지네이션 및 필터
+- `GET /api/auth/me`: 현재 Google 로그인 사용자 조회
+- `POST /api/auth/logout`: 로그인 세션 종료
 
 학습 API는 로그인 세션의 `userId`·`nickname` 또는 HS256 Bearer JWT의 `userId`·`nickname` claim으로 사용자를 식별합니다. JWT 사용 시 충분히 긴 `JWT_SECRET` 환경변수를 설정해야 합니다.
 
