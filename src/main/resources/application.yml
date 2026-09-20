@@ -26,10 +26,8 @@ spring:
       minimum-idle: 1
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     open-in-view: false
-  flyway:
-    enabled: true
 
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
