@@ -12,8 +12,10 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 import com.algopoolja.quiz.learning.UserIdentity;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class OAuthLoginSuccessHandler implements AuthenticationSuccessHandler {
     private final String frontendUrl;
     private final OAuthUserService oauthUserService;
@@ -43,6 +45,7 @@ public class OAuthLoginSuccessHandler implements AuthenticationSuccessHandler {
         session.setAttribute("nickname", user.getNickname());
         session.setAttribute("email", email);
         session.setAttribute("picture", oauthUser.getAttribute("picture"));
+        log.info("OAuth login completed: userId={}", user.getUserId());
 
         String target = UriComponentsBuilder.fromUriString(frontendUrl)
                 .queryParam("view", "dashboard")
