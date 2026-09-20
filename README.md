@@ -39,6 +39,19 @@ export FRONTEND_URL="http://localhost:5173"
 ./gradlew bootJar
 ```
 
+### Docker
+
+```bash
+docker build -t algopoolja-be .
+docker run --rm -p 8080:8080 \
+  -e OPENAI_API_KEY \
+  -e GOOGLE_CLIENT_ID \
+  -e GOOGLE_CLIENT_SECRET \
+  -e JWT_SECRET \
+  -e FRONTEND_URL=http://localhost:8080 \
+  algopoolja-be
+```
+
 ## API
 
 - `POST /api/quizzes`: `{ "category": "DP", "difficulty": "보통" }`

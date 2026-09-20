@@ -25,5 +25,7 @@ app:
     default-timezone: Asia/Seoul
 
 server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
   error:
     include-message: always
