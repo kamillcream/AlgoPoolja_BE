@@ -1,12 +1,13 @@
 let currentQuizId = null;
 const $ = id => document.getElementById(id);
+const requestOptions = options => ({credentials: 'include', ...options});
 
 $('generate').addEventListener('click', async () => {
   $('generate').disabled = true;
   $('status').textContent = 'Spring AI가 새 문제를 생성하고 있습니다…';
   $('quiz').classList.add('hidden');
   try {
-    const response = await fetch('/api/quizzes', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({category:$('category').value,difficulty:$('difficulty').value})});
+    const response = await fetch('/api/quizzes', requestOptions({method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({category:$('category').value,difficulty:$('difficulty').value})}));
     const quiz = await response.json();
     if (!response.ok) throw new Error(quiz.message || '생성에 실패했습니다.');
     currentQuizId = quiz.quizId;
@@ -21,7 +22,7 @@ $('generate').addEventListener('click', async () => {
 $('check').addEventListener('click', async () => {
   const answers = [...document.querySelectorAll('.answer')].map(x=>x.value);
   if (answers.some(x=>!x)) { $('result').textContent='모든 빈칸을 선택해주세요.'; return; }
-  const response = await fetch(`/api/quizzes/${currentQuizId}/check`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({answers})});
+  const response = await fetch(`/api/quizzes/${currentQuizId}/check`,requestOptions({method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({answers})}));
   const result = await response.json();
   $('result').textContent = result.message || '채점에 실패했습니다.';
 });
