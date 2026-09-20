@@ -17,7 +17,7 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET:google-client-secret-not-configured}
             scope: openid,profile,email
   datasource:
-    url: jdbc:postgresql:///${DB_NAME}?cloudSqlInstance=${CLOUD_SQL_CONNECTION_NAME}&socketFactory=com.google.cloud.sql.postgres.SocketFactory&cloudSqlRefreshStrategy=lazy&ipTypes=${DB_IP_TYPES:PUBLIC}
+    url: jdbc:postgresql:///${DB_NAME}?cloudSqlInstance=${CLOUD_SQL_CONNECTION_NAME}&socketFactory=com.google.cloud.sql.postgres.SocketFactory&cloudSqlRefreshStrategy=lazy&ipTypes=${DB_IP_TYPES:PRIVATE}
     username: ${DB_USER}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
