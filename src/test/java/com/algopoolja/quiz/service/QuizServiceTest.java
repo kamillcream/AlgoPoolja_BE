@@ -4,8 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.algopoolja.quiz.domain.AnswerBlockInfo;
 import com.algopoolja.quiz.domain.ProblemInfo;
 import com.algopoolja.quiz.domain.TestCase;
-import com.algopoolja.quiz.learning.LearningStore;
 import com.algopoolja.quiz.learning.UserIdentity;
+import com.algopoolja.quiz.support.InMemoryLearningStore;
+import com.algopoolja.quiz.support.InMemoryQuizStore;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,8 @@ class QuizServiceTest {
             public String createBlankCode(String code) { return "def solution(a, b):\n    return <BLANK>"; }
             public AnswerBlockInfo createAnswerBlocks(String a, String b) { return new AnswerBlockInfo(List.of("a + b"), List.of("a - b", "a * b", "a / b")); }
         };
-        QuizService service = new QuizService(fake, new QuizTools(), new LearningStore());
+        QuizService service = new QuizService(fake, new QuizTools(),
+                new InMemoryLearningStore(), new InMemoryQuizStore());
         var quiz = service.generate("전체", "쉬움");
         OffsetDateTime startedAt = OffsetDateTime.now().minusSeconds(184);
         var result = service.check(quiz.getQuizId(), List.of("a + b"), startedAt,

@@ -8,6 +8,8 @@ import com.algopoolja.quiz.domain.TestCase;
 import com.algopoolja.quiz.service.AiQuizGenerator;
 import com.algopoolja.quiz.service.QuizService;
 import com.algopoolja.quiz.service.QuizTools;
+import com.algopoolja.quiz.support.InMemoryLearningStore;
+import com.algopoolja.quiz.support.InMemoryQuizStore;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -16,8 +18,8 @@ import org.junit.jupiter.api.Test;
 class DashboardServiceTest {
     @Test
     void aggregatesAttemptsAndTracksResolvedWrongQuiz() {
-        LearningStore store = new LearningStore();
-        QuizService quizService = new QuizService(fakeGenerator(), new QuizTools(), store);
+        LearningStore store = new InMemoryLearningStore();
+        QuizService quizService = new QuizService(fakeGenerator(), new QuizTools(), store, new InMemoryQuizStore());
         DashboardService dashboard = new DashboardService(store, quizService);
         UserIdentity user = new UserIdentity(12L, "알고풀자");
         Long quizId = quizService.generate("DP", "어려움").getQuizId();

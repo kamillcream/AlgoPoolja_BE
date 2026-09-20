@@ -8,15 +8,11 @@ import com.algopoolja.quiz.domain.TestCase;
 import com.algopoolja.quiz.domain.QuizSnapshot;
 import com.algopoolja.quiz.learning.LearningStore;
 import com.algopoolja.quiz.learning.UserIdentity;
+import com.algopoolja.quiz.persistence.QuizStore;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,8 +25,7 @@ public class QuizService {
     private final AiQuizGenerator generator;
     private final QuizTools tools;
     private final LearningStore learningStore;
-    private final Map<Long, StoredQuiz> localQuizzes = new ConcurrentHashMap<>();
-    private final AtomicLong localSequence = new AtomicLong();
+    private final QuizStore quizStore;
 
     public GenerateResponse generate(String category, String difficulty) {
         if (!CATEGORIES.contains(category)) throw new IllegalArgumentException("지원하지 않는 문제 유형입니다.");
@@ -48,17 +43,14 @@ public class QuizService {
                 .map(test -> new TestCase(tools.cleanTestcaseText(test.getInput()), tools.cleanTestcaseText(test.getOutput())))
                 .toList();
 
-        long id = localSequence.incrementAndGet();
-        localQuizzes.put(id, new StoredQuiz(id, problem.getTitle(), problem.getDescription(), normalizeCategory(category),
-                normalizeDifficulty(difficulty), testCases, problem.getCode(), blankCode,
-                List.copyOf(blocks.getCorrectAnswers()), choices));
+        long id = quizStore.save(problem.getTitle(), problem.getDescription(), normalizeCategory(category),
+                difficulty, problem.getCode(), blankCode, blocks.getCorrectAnswers(), choices, testCases);
         return new GenerateResponse(id, problem.getTitle(), problem.getDescription(), testCases, blankCode,
                 choices, blocks.getCorrectAnswers().size(), problem.getCode());
     }
 
     public CheckResponse check(Long id, List<String> answers, OffsetDateTime startedAt, UserIdentity user) {
-        StoredQuiz quiz = findQuiz(id);
-        if (quiz == null) throw new QuizNotFoundException();
+        QuizSnapshot quiz = getQuiz(id);
         if (answers.size() != quiz.getCorrectAnswers().size()) {
             throw new IllegalArgumentException("빈칸 %d개를 모두 선택해주세요.".formatted(quiz.getCorrectAnswers().size()));
         }
@@ -75,28 +67,11 @@ public class QuizService {
     }
 
     public QuizSnapshot getQuiz(Long id) {
-        StoredQuiz quiz = findQuiz(id);
-        if (quiz == null) throw new QuizNotFoundException();
-        return new QuizSnapshot(quiz.getQuizId(), quiz.getTitle(), quiz.getDescription(), quiz.getCategory(),
-                quiz.getDifficulty(), quiz.getTestcases(), quiz.getAnswerCode(), quiz.getBlankCode(),
-                quiz.getCorrectAnswers(), quiz.getAnswerBlocks());
-    }
-
-    private StoredQuiz findQuiz(long id) {
-        return localQuizzes.get(id);
+        return quizStore.findById(id).orElseThrow(QuizNotFoundException::new);
     }
 
     private String normalizeCategory(String value) {
         return "전체".equals(value) ? "ETC" : value.toUpperCase();
-    }
-
-    private String normalizeDifficulty(String value) {
-        return switch (value) {
-            case "쉬움" -> "EASY";
-            case "보통" -> "NORMAL";
-            case "어려움" -> "HARD";
-            default -> value.toUpperCase();
-        };
     }
 
     private void requireValidProblem(ProblemInfo problem) {
@@ -106,18 +81,4 @@ public class QuizService {
         }
     }
 
-    @Getter
-    @AllArgsConstructor
-    private static class StoredQuiz {
-        private Long quizId;
-        private String title;
-        private String description;
-        private String category;
-        private String difficulty;
-        private List<TestCase> testcases;
-        private String answerCode;
-        private String blankCode;
-        private List<String> correctAnswers;
-        private List<String> answerBlocks;
-    }
 }

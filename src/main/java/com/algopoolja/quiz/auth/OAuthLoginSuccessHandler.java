@@ -11,13 +11,17 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
+import com.algopoolja.quiz.learning.UserIdentity;
 
 @Component
 public class OAuthLoginSuccessHandler implements AuthenticationSuccessHandler {
     private final String frontendUrl;
+    private final OAuthUserService oauthUserService;
 
-    public OAuthLoginSuccessHandler(@Value("${app.frontend-url}") String frontendUrl) {
+    public OAuthLoginSuccessHandler(@Value("${app.frontend-url}") String frontendUrl,
+                                    OAuthUserService oauthUserService) {
         this.frontendUrl = frontendUrl;
+        this.oauthUserService = oauthUserService;
     }
 
     @Override
@@ -33,9 +37,10 @@ public class OAuthLoginSuccessHandler implements AuthenticationSuccessHandler {
             return;
         }
 
+        UserIdentity user = oauthUserService.loginOrSignUp(email, nickname);
         HttpSession session = request.getSession(true);
-        session.setAttribute("userId", OAuthUserIdentity.stableUserId("google", subject));
-        session.setAttribute("nickname", nickname == null || nickname.isBlank() ? "사용자" : nickname);
+        session.setAttribute("userId", user.getUserId());
+        session.setAttribute("nickname", user.getNickname());
         session.setAttribute("email", email);
         session.setAttribute("picture", oauthUser.getAttribute("picture"));
 

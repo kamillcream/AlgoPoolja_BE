@@ -28,6 +28,9 @@ http://localhost:8080/login/oauth2/code/google
 export GOOGLE_CLIENT_ID="your-client-id"
 export GOOGLE_CLIENT_SECRET="your-client-secret"
 export FRONTEND_URL="http://localhost:5173"
+export DB_URL="jdbc:postgresql://localhost:5432/algopoolja"
+export DB_USERNAME="postgres"
+export DB_PASSWORD="postgres"
 ```
 
 Cloud Run 운영 환경에서는 `FRONTEND_URL=https://algopoolja-fe.vercel.app`, `SESSION_COOKIE_SAME_SITE=none`, `SESSION_COOKIE_SECURE=true`를 사용합니다.
@@ -50,6 +53,9 @@ docker run --rm -p 8080:8080 \
   -e GOOGLE_CLIENT_ID \
   -e GOOGLE_CLIENT_SECRET \
   -e JWT_SECRET \
+  -e DB_URL \
+  -e DB_USERNAME \
+  -e DB_PASSWORD \
   -e FRONTEND_URL=http://localhost:8080 \
   algopoolja-be
 ```
@@ -67,7 +73,7 @@ docker run --rm -p 8080:8080 \
 
 학습 API는 로그인 세션의 `userId`·`nickname` 또는 HS256 Bearer JWT의 `userId`·`nickname` claim으로 사용자를 식별합니다. JWT 사용 시 충분히 긴 `JWT_SECRET` 환경변수를 설정해야 합니다.
 
-생성 결과와 풀이 이력은 현재 서버 메모리에 저장되며 애플리케이션 재시작 시 초기화됩니다. 운영 환경에서는 `LearningStore`와 퀴즈 저장 부분을 영속 저장소 구현으로 교체해야 합니다.
+퀴즈, 테스트케이스, 사용자별 풀이 이력과 오답 상태는 PostgreSQL에 저장됩니다. 애플리케이션 시작 시 Flyway가 스키마를 생성하고 Hibernate는 스키마 일치 여부를 검증합니다. Google OAuth 최초 로그인 사용자는 이메일을 기준으로 자동 가입됩니다.
 
 ## 원본과의 대응
 
