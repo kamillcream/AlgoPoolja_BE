@@ -30,6 +30,8 @@ export GOOGLE_CLIENT_SECRET="your-client-secret"
 export FRONTEND_URL="http://localhost:5173"
 ```
 
+Cloud Run 운영 환경에서는 `FRONTEND_URL=https://algopoolja-fe.vercel.app`, `SESSION_COOKIE_SAME_SITE=none`, `SESSION_COOKIE_SECURE=true`를 사용합니다.
+
 로그인 시작 경로는 `/oauth2/authorization/google`, 현재 사용자 조회는 `GET /api/auth/me`, 로그아웃은 `POST /api/auth/logout`입니다.
 
 테스트와 실행 JAR 생성은 다음 명령을 사용합니다.
