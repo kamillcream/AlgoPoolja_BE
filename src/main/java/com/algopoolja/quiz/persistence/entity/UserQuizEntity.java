@@ -1,6 +1,7 @@
 package com.algopoolja.quiz.persistence.entity;
 
 import jakarta.persistence.*;
+import com.algopoolja.quiz.learning.ReviewSchedule;
 import java.time.OffsetDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -35,7 +36,7 @@ public class UserQuizEntity {
             nextReviewAt = null;
         } else {
             wrongCount++;
-            nextReviewAt = attemptedAt.plusDays(1);
+            nextReviewAt = ReviewSchedule.nextReviewAt(attemptedAt, wrongCount);
         }
         lastAttemptAt = attemptedAt;
     }

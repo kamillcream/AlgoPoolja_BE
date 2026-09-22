@@ -126,8 +126,10 @@ public class DashboardService {
             if (category != null && !category.equalsIgnoreCase(quiz.getCategory())) return;
             if (difficulty != null && !difficulty.equalsIgnoreCase(quiz.getDifficulty())) return;
             long wrongCount = chronological.stream().filter(attempt -> !attempt.isCorrect()).count();
+            OffsetDateTime nextReviewAt = ReviewSchedule.nextReviewAt(lastWrong.getAttemptedAt(), (int) wrongCount);
+            if ("unresolved".equals(status) && nextReviewAt.isAfter(OffsetDateTime.now())) return;
             result.add(new WrongQuizView(quizId, quiz.getTitle(), quiz.getCategory(), quiz.getDifficulty(),
-                    wrongCount, resolved, lastWrong.getAttemptedAt()));
+                    wrongCount, resolved, lastWrong.getAttemptedAt(), nextReviewAt));
         });
         return result.stream().sorted(Comparator.comparing(WrongQuizView::getLastAttemptedAt).reversed()).toList();
     }
@@ -148,7 +150,7 @@ public class DashboardService {
 
     private SummaryWrongQuizView summaryWrongQuizView(WrongQuizView view) {
         return new SummaryWrongQuizView(view.getQuizId(), view.getTitle(), view.getCategory(), view.getDifficulty(),
-                view.getWrongAttemptCount(), view.getLastAttemptedAt());
+                view.getWrongAttemptCount(), view.getLastAttemptedAt(), view.getNextReviewAt());
     }
 
     private boolean matchesQuiz(QuizAttempt attempt, String category, String difficulty) {

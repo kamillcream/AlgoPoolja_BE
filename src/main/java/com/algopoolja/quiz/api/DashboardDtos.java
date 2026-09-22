@@ -47,6 +47,7 @@ public final class DashboardDtos {
         long wrongAttemptCount;
         boolean resolved;
         OffsetDateTime lastAttemptedAt;
+        OffsetDateTime nextReviewAt;
     }
 
     @Value
@@ -57,6 +58,7 @@ public final class DashboardDtos {
         String difficulty;
         long wrongAttemptCount;
         OffsetDateTime lastAttemptedAt;
+        OffsetDateTime nextReviewAt;
     }
 
     @Value
