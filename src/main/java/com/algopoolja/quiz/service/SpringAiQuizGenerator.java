@@ -17,11 +17,6 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
 
     @Override
     public ProblemInfo createProblem(String category, String difficulty) {
-        return createProblem(category, difficulty, "ko");
-    }
-
-    @Override
-    public ProblemInfo createProblem(String category, String difficulty, String language) {
         return chatClient.prompt()
                 .system("""
                         당신은 알고리즘 코딩테스트 문제 생성기입니다.
@@ -40,7 +35,6 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         새로운 알고리즘 문제를 하나 생성하세요.
                         문제 유형: {category}
                         난이도: {difficulty}
-                        출력 언어: {language}
                         유형별 출제 방향: {categoryGuide}
                         난이도별 요구사항: {difficultyGuide}
                         생성 시드: {seed}
@@ -51,7 +45,6 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         """)
                         .param("category", category)
                         .param("difficulty", difficulty)
-                        .param("language", "en".equals(language) ? "English" : "한국어")
                         .param("categoryGuide", categoryGuide(category))
                         .param("difficultyGuide", difficultyGuide(difficulty))
                         .param("seed", ThreadLocalRandom.current().nextInt(1, 1_000_001))
@@ -136,11 +129,6 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
 
     @Override
     public FullQuizInfo createFullQuiz(String category, String difficulty) {
-        return createFullQuiz(category, difficulty, "ko");
-    }
-
-    @Override
-    public FullQuizInfo createFullQuiz(String category, String difficulty, String language) {
         return chatClient.prompt()
                 .system("""
                         당신은 알고리즘 코딩테스트 문제와 빈칸 학습 콘텐츠를 함께 만드는 생성기입니다.
@@ -157,13 +145,11 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         알고리즘 문제와 빈칸 학습 콘텐츠를 하나 생성하세요.
                         문제 유형: {category}
                         난이도: {difficulty}
-                        출력 언어: {language}
                         생성 시드: {seed}
                         생성 시간: {now}
                         """)
                         .param("category", category)
                         .param("difficulty", difficulty)
-                        .param("language", "en".equals(language) ? "English" : "한국어")
                         .param("seed", ThreadLocalRandom.current().nextInt(1, 1_000_001))
                         .param("now", LocalDateTime.now()))
                 .call()

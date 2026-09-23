@@ -24,7 +24,7 @@ $('generate').addEventListener('click', async () => {
   $('status').textContent = 'Spring AI가 새 문제를 생성하고 있습니다…';
   $('quiz').classList.add('hidden');
   try {
-    const response = await fetch('/api/quizzes', requestOptions({method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({category:$('category').value,difficulty:$('difficulty').value,language:$('language').value})}));
+    const response = await fetch('/api/quizzes', requestOptions({method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({category:$('category').value,difficulty:$('difficulty').value})}));
     const quiz = await response.json();
     if (!response.ok) throw new Error(quiz.message || '생성에 실패했습니다.');
     currentQuizId = quiz.quizId;
