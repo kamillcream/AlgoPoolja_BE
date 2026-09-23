@@ -32,6 +32,8 @@ spring:
 
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  ai:
+    generation-strategy: ${AI_GENERATION_STRATEGY:two-step}
   cors:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:https://www.algopoolja.com,https://algopoolja.com,https://algopoolja-fe.vercel.app,https://*.vercel.app,http://localhost:5173}
   auth:

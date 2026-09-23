@@ -3,6 +3,8 @@ package com.algopoolja.quiz.service;
 import com.algopoolja.quiz.api.QuizDtos.CheckResponse;
 import com.algopoolja.quiz.api.QuizDtos.GenerateResponse;
 import com.algopoolja.quiz.domain.AnswerBlockInfo;
+import com.algopoolja.quiz.domain.BlankQuizInfo;
+import com.algopoolja.quiz.domain.FullQuizInfo;
 import com.algopoolja.quiz.domain.ProblemInfo;
 import com.algopoolja.quiz.domain.TestCase;
 import com.algopoolja.quiz.domain.QuizSnapshot;
@@ -14,10 +16,13 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class QuizService {
     private static final Set<String> CATEGORIES = Set.of("전체", "Greedy", "DP", "BFS", "DFS");
     private static final Set<String> DIFFICULTIES = Set.of("쉬움", "보통", "어려움");
@@ -27,14 +32,34 @@ public class QuizService {
     private final LearningStore learningStore;
     private final QuizStore quizStore;
 
+    @Value("${app.ai.generation-strategy:two-step}")
+    private String generationStrategy;
+
     public GenerateResponse generate(String category, String difficulty) {
+        long startedAt = System.nanoTime();
         if (!CATEGORIES.contains(category)) throw new IllegalArgumentException("지원하지 않는 문제 유형입니다.");
         if (!DIFFICULTIES.contains(difficulty)) throw new IllegalArgumentException("지원하지 않는 문제 난이도입니다.");
 
-        ProblemInfo problem = generator.createProblem(category, difficulty);
+        ProblemInfo problem;
+        BlankQuizInfo blankQuiz;
+        if ("one-step".equalsIgnoreCase(generationStrategy)) {
+            FullQuizInfo fullQuiz = generator.createFullQuiz(category, difficulty);
+            problem = fullQuiz.problem();
+            blankQuiz = fullQuiz.blankQuiz();
+        } else {
+            problem = generator.createProblem(category, difficulty);
+            blankQuiz = "legacy".equalsIgnoreCase(generationStrategy)
+                    ? new BlankQuizInfo(generator.createBlankCode(problem.getCode()), null, null)
+                    : generator.createBlankQuiz(problem.getCode());
+            if ("legacy".equalsIgnoreCase(generationStrategy)) {
+                AnswerBlockInfo blocks = generator.createAnswerBlocks(problem.getCode(), blankQuiz.getBlankCode());
+                blankQuiz.setCorrectAnswers(blocks.getCorrectAnswers());
+                blankQuiz.setWrongAnswers(blocks.getWrongAnswers());
+            }
+        }
         requireValidProblem(problem);
-        String blankCode = generator.createBlankCode(problem.getCode());
-        AnswerBlockInfo blocks = generator.createAnswerBlocks(problem.getCode(), blankCode);
+        String blankCode = blankQuiz.getBlankCode();
+        AnswerBlockInfo blocks = new AnswerBlockInfo(blankQuiz.getCorrectAnswers(), blankQuiz.getWrongAnswers());
         String validation = tools.validateBlankCount(blankCode, blocks.getCorrectAnswers());
         if (!"OK".equals(validation)) throw new QuizGenerationException(validation);
 
@@ -45,8 +70,13 @@ public class QuizService {
 
         long id = quizStore.save(problem.getTitle(), problem.getDescription(), normalizeCategory(category),
                 difficulty, problem.getCode(), blankCode, blocks.getCorrectAnswers(), choices, testCases);
+        log.info("Quiz generation completed: strategy={}, totalMs={}", generationStrategy, elapsedMillis(startedAt));
         return new GenerateResponse(id, problem.getTitle(), problem.getDescription(), testCases, blankCode,
                 choices, blocks.getCorrectAnswers().size(), problem.getCode());
+    }
+
+    private long elapsedMillis(long startedAt) {
+        return (System.nanoTime() - startedAt) / 1_000_000;
     }
 
     public CheckResponse check(Long id, List<String> answers, OffsetDateTime startedAt, UserIdentity user) {
