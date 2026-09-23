@@ -22,6 +22,7 @@ public final class QuizDtos {
         private String category;
         @NotBlank
         private String difficulty;
+        private String language = "ko";
     }
 
     @Getter

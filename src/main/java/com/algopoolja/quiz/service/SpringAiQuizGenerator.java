@@ -17,6 +17,11 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
 
     @Override
     public ProblemInfo createProblem(String category, String difficulty) {
+        return createProblem(category, difficulty, "ko");
+    }
+
+    @Override
+    public ProblemInfo createProblem(String category, String difficulty, String language) {
         return chatClient.prompt()
                 .system("""
                         당신은 알고리즘 코딩테스트 문제 생성기입니다.
@@ -26,6 +31,8 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         문제 설명에는 입력 제한, 출력 형식, 시간 복잡도에 영향을 주는 조건을 포함하세요.
                         테스트케이스는 예제뿐 아니라 중복값, 최소·최대 경계, 불가능한 경우를 포함해 3개 이상 만드세요.
                         문제 설명, 테스트케이스, Python 정답 코드를 만드세요.
+                        title과 description의 자연어는 요청된 언어로 작성하세요.
+                        입력·출력 데이터와 Python 코드·필드명은 언어를 번역하지 마세요.
                         정답 코드는 반드시 하나의 solution 함수로 작성하세요.
                         테스트케이스 입력과 출력은 마크다운이나 라벨 없는 순수 값이어야 합니다.
                         """)
@@ -33,6 +40,7 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         새로운 알고리즘 문제를 하나 생성하세요.
                         문제 유형: {category}
                         난이도: {difficulty}
+                        출력 언어: {language}
                         유형별 출제 방향: {categoryGuide}
                         난이도별 요구사항: {difficultyGuide}
                         생성 시드: {seed}
@@ -43,6 +51,7 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         """)
                         .param("category", category)
                         .param("difficulty", difficulty)
+                        .param("language", "en".equals(language) ? "English" : "한국어")
                         .param("categoryGuide", categoryGuide(category))
                         .param("difficultyGuide", difficultyGuide(difficulty))
                         .param("seed", ThreadLocalRandom.current().nextInt(1, 1_000_001))
@@ -127,6 +136,11 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
 
     @Override
     public FullQuizInfo createFullQuiz(String category, String difficulty) {
+        return createFullQuiz(category, difficulty, "ko");
+    }
+
+    @Override
+    public FullQuizInfo createFullQuiz(String category, String difficulty, String language) {
         return chatClient.prompt()
                 .system("""
                         당신은 알고리즘 코딩테스트 문제와 빈칸 학습 콘텐츠를 함께 만드는 생성기입니다.
@@ -136,16 +150,20 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         correctAnswers에는 빈칸 정답을 순서대로, wrongAnswers에는 비슷하지만 틀린 코드 조각을 3~6개 넣으세요.
                         테스트케이스 입력과 출력은 라벨이나 마크다운 없는 순수 값이어야 합니다.
                         설명이나 마크다운은 필드 값에 추가하지 마세요.
+                        title과 description의 자연어는 요청된 언어로 작성하세요.
+                        입력·출력 데이터와 Python 코드·필드명은 번역하지 마세요.
                         """)
                 .user(u -> u.text("""
                         알고리즘 문제와 빈칸 학습 콘텐츠를 하나 생성하세요.
                         문제 유형: {category}
                         난이도: {difficulty}
+                        출력 언어: {language}
                         생성 시드: {seed}
                         생성 시간: {now}
                         """)
                         .param("category", category)
                         .param("difficulty", difficulty)
+                        .param("language", "en".equals(language) ? "English" : "한국어")
                         .param("seed", ThreadLocalRandom.current().nextInt(1, 1_000_001))
                         .param("now", LocalDateTime.now()))
                 .call()

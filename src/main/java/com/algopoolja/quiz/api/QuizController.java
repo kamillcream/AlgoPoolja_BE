@@ -29,7 +29,7 @@ public class QuizController {
     public GenerateResponse generate(@Valid @RequestBody GenerateRequest request,
                                      HttpServletRequest servletRequest) {
         currentUserProvider.requireCurrentUser(servletRequest);
-        return service.generate(request.getCategory(), request.getDifficulty());
+        return service.generate(request.getCategory(), request.getDifficulty(), request.getLanguage());
     }
 
     @PostMapping("/{quizId}/check")

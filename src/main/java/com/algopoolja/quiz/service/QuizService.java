@@ -29,6 +29,7 @@ public class QuizService {
             "전체", "Greedy", "DP", "BFS", "DFS", "구현/시뮬레이션", "스택/큐",
             "해시/정렬", "이분 탐색", "힙/우선순위 큐", "완전탐색/백트래킹", "그래프", "문자열/파싱");
     private static final Set<String> DIFFICULTIES = Set.of("쉬움", "보통", "어려움");
+    private static final Set<String> LANGUAGES = Set.of("ko", "en");
 
     private final AiQuizGenerator generator;
     private final QuizTools tools;
@@ -40,21 +41,29 @@ public class QuizService {
     private String generationStrategy;
 
     public GenerateResponse generate(String category, String difficulty) {
+        return generate(category, difficulty, "ko");
+    }
+
+    public GenerateResponse generate(String category, String difficulty, String language) {
         long startedAt = System.nanoTime();
         if (!CATEGORIES.contains(category)) throw new IllegalArgumentException("지원하지 않는 문제 유형입니다.");
         if (!DIFFICULTIES.contains(difficulty)) throw new IllegalArgumentException("지원하지 않는 문제 난이도입니다.");
+        if (language == null || !LANGUAGES.contains(language.toLowerCase())) {
+            throw new IllegalArgumentException("지원하지 않는 언어입니다.");
+        }
+        language = language.toLowerCase();
 
         ProblemInfo problem;
         BlankQuizInfo blankQuiz;
         if ("one-step".equalsIgnoreCase(generationStrategy)) {
-            FullQuizInfo fullQuiz = generator.createFullQuiz(category, difficulty);
+            FullQuizInfo fullQuiz = generator.createFullQuiz(category, difficulty, language);
             problem = fullQuiz.problem();
             blankQuiz = fullQuiz.blankQuiz();
         } else if ("parallel-pipeline".equalsIgnoreCase(generationStrategy)) {
-            problem = generator.createProblem(category, difficulty);
+            problem = generator.createProblem(category, difficulty, language);
             blankQuiz = generateParallelPipeline(problem);
         } else {
-            problem = generator.createProblem(category, difficulty);
+            problem = generator.createProblem(category, difficulty, language);
             blankQuiz = "legacy".equalsIgnoreCase(generationStrategy)
                     ? new BlankQuizInfo(generator.createBlankCode(problem.getCode()), null, null)
                     : generator.createBlankQuiz(problem.getCode());
