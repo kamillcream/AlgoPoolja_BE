@@ -91,8 +91,20 @@ public class QuizService {
                         .toList());
 
         String blankCode = blankCodeFuture.join();
-        List<String> correctAnswers = extractCorrectAnswers(problem.getCode(), blankCode);
-        List<String> wrongAnswers = wrongAnswerGenerator.generate(correctAnswers);
+        List<String> correctAnswers;
+        List<String> wrongAnswers;
+        try {
+            correctAnswers = extractCorrectAnswers(problem.getCode(), blankCode);
+            wrongAnswers = wrongAnswerGenerator.generate(correctAnswers);
+        } catch (QuizGenerationException extractionFailure) {
+            // Models can change whitespace while creating blanks. Keep the fast path strict,
+            // but fall back to the existing AI answer-block step instead of returning 502.
+            log.warn("Local answer extraction failed; falling back to answer-block generation: {}",
+                    extractionFailure.getMessage());
+            AnswerBlockInfo blocks = generator.createAnswerBlocks(problem.getCode(), blankCode);
+            correctAnswers = blocks.getCorrectAnswers();
+            wrongAnswers = blocks.getWrongAnswers();
+        }
         // Join the independent branch before returning so validation observes the same snapshot.
         cleanedTestsFuture.join();
         log.info("Quiz pipeline completed: stage=blank-and-clean, totalMs={}", elapsedMillis(startedAt));
