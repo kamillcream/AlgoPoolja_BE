@@ -10,6 +10,7 @@ import com.algopoolja.quiz.support.InMemoryQuizStore;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class QuizServiceTest {
     @Test
@@ -30,5 +31,33 @@ class QuizServiceTest {
         assertThat(result.getAttemptId()).isEqualTo(1L);
         assertThat(result.getAttemptNumber()).isEqualTo(1);
         assertThat(result.getDurationSeconds()).isBetween(183L, 184L);
+    }
+
+    @Test
+    void parallelPipelineExtractsAnswersAndCreatesServerSideDistractors() {
+        AiQuizGenerator fake = new AiQuizGenerator() {
+            public ProblemInfo createProblem(String c, String d) {
+                return new ProblemInfo("합", "두 수의 합",
+                        List.of(new TestCase("입력: 1 2", "3"), new TestCase("2 3", "5")),
+                        "def solution(a, b):\n    return a + b");
+            }
+
+            public String createBlankCode(String code) {
+                return "def solution(a, b):\n    return <BLANK>";
+            }
+
+            public AnswerBlockInfo createAnswerBlocks(String a, String b) {
+                return new AnswerBlockInfo(List.of("a + b"), List.of("a - b"));
+            }
+        };
+        QuizService service = new QuizService(fake, new QuizTools(),
+                new InMemoryLearningStore(), new InMemoryQuizStore());
+        ReflectionTestUtils.setField(service, "generationStrategy", "parallel-pipeline");
+
+        var quiz = service.generate("전체", "쉬움");
+
+        assertThat(quiz.getBlankCount()).isEqualTo(1);
+        assertThat(quiz.getAnswerBlocks()).contains("a + b");
+        assertThat(quiz.getAnswerBlocks()).contains("a - b");
     }
 }

@@ -15,6 +15,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +32,7 @@ public class QuizService {
     private final QuizTools tools;
     private final LearningStore learningStore;
     private final QuizStore quizStore;
+    private final WrongAnswerGenerator wrongAnswerGenerator = new WrongAnswerGenerator();
 
     @Value("${app.ai.generation-strategy:two-step}")
     private String generationStrategy;
@@ -46,6 +48,9 @@ public class QuizService {
             FullQuizInfo fullQuiz = generator.createFullQuiz(category, difficulty);
             problem = fullQuiz.problem();
             blankQuiz = fullQuiz.blankQuiz();
+        } else if ("parallel-pipeline".equalsIgnoreCase(generationStrategy)) {
+            problem = generator.createProblem(category, difficulty);
+            blankQuiz = generateParallelPipeline(problem);
         } else {
             problem = generator.createProblem(category, difficulty);
             blankQuiz = "legacy".equalsIgnoreCase(generationStrategy)
@@ -73,6 +78,62 @@ public class QuizService {
         log.info("Quiz generation completed: strategy={}, totalMs={}", generationStrategy, elapsedMillis(startedAt));
         return new GenerateResponse(id, problem.getTitle(), problem.getDescription(), testCases, blankCode,
                 choices, blocks.getCorrectAnswers().size(), problem.getCode());
+    }
+
+    private BlankQuizInfo generateParallelPipeline(ProblemInfo problem) {
+        long startedAt = System.nanoTime();
+        CompletableFuture<String> blankCodeFuture = CompletableFuture.supplyAsync(
+                () -> generator.createBlankCode(problem.getCode()));
+        CompletableFuture<List<TestCase>> cleanedTestsFuture = CompletableFuture.supplyAsync(
+                () -> problem.getTestcases().stream()
+                        .map(test -> new TestCase(tools.cleanTestcaseText(test.getInput()),
+                                tools.cleanTestcaseText(test.getOutput())))
+                        .toList());
+
+        String blankCode = blankCodeFuture.join();
+        List<String> correctAnswers = extractCorrectAnswers(problem.getCode(), blankCode);
+        List<String> wrongAnswers = wrongAnswerGenerator.generate(correctAnswers);
+        // Join the independent branch before returning so validation observes the same snapshot.
+        cleanedTestsFuture.join();
+        log.info("Quiz pipeline completed: stage=blank-and-clean, totalMs={}", elapsedMillis(startedAt));
+        return new BlankQuizInfo(blankCode, correctAnswers, wrongAnswers);
+    }
+
+    /** Extracts blank contents without another AI call and verifies reconstruction. */
+    private List<String> extractCorrectAnswers(String answerCode, String blankCode) {
+        List<String> answers = new java.util.ArrayList<>();
+        int sourceIndex = 0;
+        int blankIndex = 0;
+        while (blankIndex < blankCode.length()) {
+            int marker = blankCode.indexOf("<BLANK>", blankIndex);
+            if (marker < 0) {
+                if (!answerCode.substring(sourceIndex).equals(blankCode.substring(blankIndex))) {
+                    throw new QuizGenerationException("빈칸 코드가 원본 정답 코드와 일치하지 않습니다.");
+                }
+                sourceIndex = answerCode.length();
+                blankIndex = blankCode.length();
+                break;
+            }
+            String literal = blankCode.substring(blankIndex, marker);
+            if (!answerCode.startsWith(literal, sourceIndex)) {
+                throw new QuizGenerationException("빈칸 코드의 원본 위치를 확인할 수 없습니다.");
+            }
+            sourceIndex += literal.length();
+            int nextMarker = blankCode.indexOf("<BLANK>", marker + 7);
+            int nextLiteralStart = nextMarker < 0 ? blankCode.length() : nextMarker;
+            String suffix = blankCode.substring(marker + 7, nextLiteralStart);
+            int suffixIndex = suffix.isEmpty() ? answerCode.length() : answerCode.indexOf(suffix, sourceIndex);
+            if (suffixIndex < sourceIndex) {
+                throw new QuizGenerationException("빈칸 코드의 정답 블록을 추출할 수 없습니다.");
+            }
+            answers.add(answerCode.substring(sourceIndex, suffixIndex));
+            sourceIndex = suffixIndex;
+            blankIndex = marker + 7;
+        }
+        if (sourceIndex != answerCode.length()) {
+            throw new QuizGenerationException("빈칸 코드로 정답 코드를 복원할 수 없습니다.");
+        }
+        return answers;
     }
 
     private long elapsedMillis(long startedAt) {
