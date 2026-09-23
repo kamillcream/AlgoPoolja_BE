@@ -44,6 +44,7 @@ public class QuizController {
         QuizSnapshot quiz = service.getQuiz(quizId);
         return new QuizDetailResponse(quiz.getQuizId(), quiz.getTitle(), quiz.getDescription(), quiz.getCategory(),
                 quiz.getDifficulty(), quiz.getTestcases(), quiz.getBlankCode(), quiz.getAnswerBlocks(),
-                quiz.getCorrectAnswers().size());
+                quiz.getCorrectAnswers().size(), quiz.getHint(), quiz.getExplanation(), quiz.getAlgorithm(),
+                quiz.getTimeComplexity(), quiz.getSpaceComplexity(), quiz.getCommonMistakes());
     }
 }

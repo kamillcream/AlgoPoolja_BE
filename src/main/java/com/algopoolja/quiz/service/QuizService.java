@@ -76,10 +76,14 @@ public class QuizService {
                 .toList();
 
         long id = quizStore.save(problem.getTitle(), problem.getDescription(), normalizeCategory(category),
-                difficulty, problem.getCode(), blankCode, blocks.getCorrectAnswers(), choices, testCases);
+                difficulty, problem.getCode(), blankCode, blocks.getCorrectAnswers(), choices, testCases,
+                problem.getHint(), problem.getExplanation(), problem.getAlgorithm(), problem.getTimeComplexity(),
+                problem.getSpaceComplexity(), problem.getCommonMistakes());
         log.info("Quiz generation completed: strategy={}, totalMs={}", generationStrategy, elapsedMillis(startedAt));
         return new GenerateResponse(id, problem.getTitle(), problem.getDescription(), testCases, blankCode,
-                choices, blocks.getCorrectAnswers().size(), problem.getCode());
+                choices, blocks.getCorrectAnswers().size(), problem.getCode(), problem.getHint(),
+                problem.getExplanation(), problem.getAlgorithm(), problem.getTimeComplexity(),
+                problem.getSpaceComplexity(), problem.getCommonMistakes());
     }
 
     private BlankQuizInfo generateParallelPipeline(ProblemInfo problem) {

@@ -26,8 +26,11 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         문제 설명에는 입력 제한, 출력 형식, 시간 복잡도에 영향을 주는 조건을 포함하세요.
                         테스트케이스는 예제뿐 아니라 중복값, 최소·최대 경계, 불가능한 경우를 포함해 3개 이상 만드세요.
                         문제 설명, 테스트케이스, Python 정답 코드를 만드세요.
-                        title과 description의 자연어는 요청된 언어로 작성하세요.
-                        입력·출력 데이터와 Python 코드·필드명은 언어를 번역하지 마세요.
+                        hint에는 정답 코드를 직접 노출하지 않는 단계별 힌트를 1~2문장으로 작성하세요.
+                        explanation에는 알고리즘 선택 이유와 풀이 과정을 작성하세요.
+                        algorithm에는 대표 알고리즘 또는 자료구조 이름을 작성하세요.
+                        timeComplexity와 spaceComplexity에는 Big-O 표기법을 작성하세요.
+                        commonMistakes에는 학습자가 자주 하는 실수를 2~4개 작성하세요.
                         정답 코드는 반드시 하나의 solution 함수로 작성하세요.
                         테스트케이스 입력과 출력은 마크다운이나 라벨 없는 순수 값이어야 합니다.
                         """)
@@ -138,8 +141,8 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         correctAnswers에는 빈칸 정답을 순서대로, wrongAnswers에는 비슷하지만 틀린 코드 조각을 3~6개 넣으세요.
                         테스트케이스 입력과 출력은 라벨이나 마크다운 없는 순수 값이어야 합니다.
                         설명이나 마크다운은 필드 값에 추가하지 마세요.
-                        title과 description의 자연어는 요청된 언어로 작성하세요.
-                        입력·출력 데이터와 Python 코드·필드명은 번역하지 마세요.
+                        hint, explanation, algorithm, timeComplexity, spaceComplexity,
+                        commonMistakes 필드도 문제와 함께 생성하세요.
                         """)
                 .user(u -> u.text("""
                         알고리즘 문제와 빈칸 학습 콘텐츠를 하나 생성하세요.

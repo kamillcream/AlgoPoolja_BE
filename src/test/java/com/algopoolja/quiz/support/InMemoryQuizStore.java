@@ -13,13 +13,17 @@ public class InMemoryQuizStore implements QuizStore {
     @Override
     public Long save(String title, String description, String category, String difficulty,
                      String answerCode, String blankCode, List<String> correctAnswers,
-                     List<String> answerBlocks, List<TestCase> testCases) {
+                     List<String> answerBlocks, List<TestCase> testCases, String hint,
+                     String explanation, String algorithm, String timeComplexity,
+                     String spaceComplexity, List<String> commonMistakes) {
         long id = sequence.incrementAndGet();
         String apiDifficulty = switch (difficulty) {
             case "쉬움" -> "EASY"; case "보통" -> "NORMAL"; case "어려움" -> "HARD"; default -> difficulty;
         };
         quizzes.put(id, new QuizSnapshot(id, title, description, category, apiDifficulty,
-                List.copyOf(testCases), answerCode, blankCode, List.copyOf(correctAnswers), List.copyOf(answerBlocks)));
+                List.copyOf(testCases), answerCode, blankCode, List.copyOf(correctAnswers), List.copyOf(answerBlocks),
+                hint, explanation, algorithm, timeComplexity, spaceComplexity,
+                commonMistakes == null ? List.of() : List.copyOf(commonMistakes)));
         return id;
     }
 

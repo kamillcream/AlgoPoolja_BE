@@ -24,6 +24,15 @@ public class QuizEntity {
     @Column(nullable = false, length = 20) private String difficulty;
     @Column(name = "answer_code", nullable = false, columnDefinition = "text") private String answerCode;
     @Column(name = "blank_code", nullable = false, columnDefinition = "text") private String blankCode;
+    @Column(columnDefinition = "text") private String hint;
+    @Column(columnDefinition = "text") private String explanation;
+    @Column(length = 100) private String algorithm;
+    @Column(name = "time_complexity", length = 100) private String timeComplexity;
+    @Column(name = "space_complexity", length = 100) private String spaceComplexity;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "common_mistakes", columnDefinition = "jsonb")
+    private List<String> commonMistakes;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "correct_answers", nullable = false, columnDefinition = "jsonb")
@@ -50,7 +59,9 @@ public class QuizEntity {
 
     public QuizEntity(String title, String description, String category, String difficulty,
                       String answerCode, String blankCode, List<String> correctAnswers,
-                      List<String> answerBlocks, String contentHash, UserEntity createdBy) {
+                      List<String> answerBlocks, String contentHash, UserEntity createdBy,
+                      String hint, String explanation, String algorithm, String timeComplexity,
+                      String spaceComplexity, List<String> commonMistakes) {
         this.title = title;
         this.description = description;
         this.category = category;
@@ -61,6 +72,12 @@ public class QuizEntity {
         this.answerBlocks = List.copyOf(answerBlocks);
         this.contentHash = contentHash;
         this.createdBy = createdBy;
+        this.hint = hint;
+        this.explanation = explanation;
+        this.algorithm = algorithm;
+        this.timeComplexity = timeComplexity;
+        this.spaceComplexity = spaceComplexity;
+        this.commonMistakes = commonMistakes == null ? List.of() : List.copyOf(commonMistakes);
     }
 
     public void addTestCase(int order, String input, String expectedOutput) {

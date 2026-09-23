@@ -15,4 +15,14 @@ public class ProblemInfo {
     private String description;
     private List<TestCase> testcases;
     private String code;
+    private String hint;
+    private String explanation;
+    private String algorithm;
+    private String timeComplexity;
+    private String spaceComplexity;
+    private List<String> commonMistakes;
+
+    public ProblemInfo(String title, String description, List<TestCase> testcases, String code) {
+        this(title, description, testcases, code, null, null, null, null, null, List.of());
+    }
 }

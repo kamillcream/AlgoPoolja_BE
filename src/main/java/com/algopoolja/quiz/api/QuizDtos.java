@@ -37,6 +37,12 @@ public final class QuizDtos {
         private List<String> answerBlocks;
         private int blankCount;
         private String answerCode;
+        private String hint;
+        private String explanation;
+        private String algorithm;
+        private String timeComplexity;
+        private String spaceComplexity;
+        private List<String> commonMistakes;
     }
 
     @Getter
@@ -53,6 +59,12 @@ public final class QuizDtos {
         private String blankCode;
         private List<String> answerBlocks;
         private int blankCount;
+        private String hint;
+        private String explanation;
+        private String algorithm;
+        private String timeComplexity;
+        private String spaceComplexity;
+        private List<String> commonMistakes;
     }
 
     @Getter

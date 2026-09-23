@@ -22,13 +22,16 @@ public class JpaQuizStore implements QuizStore {
     @Transactional
     public Long save(String title, String description, String category, String difficulty,
                      String answerCode, String blankCode, List<String> correctAnswers,
-                     List<String> answerBlocks, List<TestCase> testCases) {
+                     List<String> answerBlocks, List<TestCase> testCases, String hint,
+                     String explanation, String algorithm, String timeComplexity,
+                     String spaceComplexity, List<String> commonMistakes) {
         String hash = sha256(String.join("|", title, description, category, difficulty, answerCode));
         Optional<QuizEntity> existing = quizRepository.findByContentHash(hash);
         if (existing.isPresent()) return existing.get().getId();
 
         QuizEntity quiz = new QuizEntity(title, description, category, difficulty, answerCode,
-                blankCode, correctAnswers, answerBlocks, hash, null);
+                blankCode, correctAnswers, answerBlocks, hash, null, hint, explanation,
+                algorithm, timeComplexity, spaceComplexity, commonMistakes);
         for (int index = 0; index < testCases.size(); index++) {
             TestCase test = testCases.get(index);
             quiz.addTestCase(index + 1, test.getInput(), test.getOutput());
@@ -48,7 +51,9 @@ public class JpaQuizStore implements QuizStore {
                 .toList();
         return new QuizSnapshot(quiz.getId(), quiz.getTitle(), quiz.getDescription(), quiz.getCategory(),
                 apiDifficulty(quiz.getDifficulty()), tests, quiz.getAnswerCode(), quiz.getBlankCode(),
-                List.copyOf(quiz.getCorrectAnswers()), List.copyOf(quiz.getAnswerBlocks()));
+                List.copyOf(quiz.getCorrectAnswers()), List.copyOf(quiz.getAnswerBlocks()), quiz.getHint(),
+                quiz.getExplanation(), quiz.getAlgorithm(), quiz.getTimeComplexity(), quiz.getSpaceComplexity(),
+                quiz.getCommonMistakes() == null ? List.of() : List.copyOf(quiz.getCommonMistakes()));
     }
 
     private String apiDifficulty(String difficulty) {

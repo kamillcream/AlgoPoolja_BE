@@ -18,12 +18,25 @@ public class FullQuizInfo {
     private String blankCode;
     private List<String> correctAnswers;
     private List<String> wrongAnswers;
+    private String hint;
+    private String explanation;
+    private String algorithm;
+    private String timeComplexity;
+    private String spaceComplexity;
+    private List<String> commonMistakes;
 
     public ProblemInfo problem() {
-        return new ProblemInfo(title, description, testcases, code);
+        return new ProblemInfo(title, description, testcases, code, hint, explanation, algorithm,
+                timeComplexity, spaceComplexity, commonMistakes);
     }
 
     public BlankQuizInfo blankQuiz() {
         return new BlankQuizInfo(blankCode, correctAnswers, wrongAnswers);
+    }
+
+    public FullQuizInfo(String title, String description, List<TestCase> testcases, String code,
+                        String blankCode, List<String> correctAnswers, List<String> wrongAnswers) {
+        this(title, description, testcases, code, blankCode, correctAnswers, wrongAnswers,
+                null, null, null, null, null, List.of());
     }
 }
