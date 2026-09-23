@@ -26,7 +26,9 @@ public class QuizController {
     private final CurrentUserProvider currentUserProvider;
 
     @PostMapping
-    public GenerateResponse generate(@Valid @RequestBody GenerateRequest request) {
+    public GenerateResponse generate(@Valid @RequestBody GenerateRequest request,
+                                     HttpServletRequest servletRequest) {
+        currentUserProvider.requireCurrentUser(servletRequest);
         return service.generate(request.getCategory(), request.getDifficulty());
     }
 
