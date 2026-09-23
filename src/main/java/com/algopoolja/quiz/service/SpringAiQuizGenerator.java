@@ -20,8 +20,12 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
         return chatClient.prompt()
                 .system("""
                         당신은 알고리즘 코딩테스트 문제 생성기입니다.
-                        백준이나 프로그래머스 스타일의 새로운 문제를 생성하세요.
-                        문제 설명, 테스트케이스 2개 이상, Python 정답 코드를 만드세요.
+                        프로그래머스 레벨 2~3 및 국내 기업 코딩테스트의 출제 의도를 참고한
+                        새로운 문제를 생성하세요. 공개된 기존 문제를 복사하거나 이름만 바꾸지 마세요.
+                        단순한 문법·반복문 문제는 피하고, 자료구조 선택과 알고리즘 설계가 필요한 문제를 만드세요.
+                        문제 설명에는 입력 제한, 출력 형식, 시간 복잡도에 영향을 주는 조건을 포함하세요.
+                        테스트케이스는 예제뿐 아니라 중복값, 최소·최대 경계, 불가능한 경우를 포함해 3개 이상 만드세요.
+                        문제 설명, 테스트케이스, Python 정답 코드를 만드세요.
                         정답 코드는 반드시 하나의 solution 함수로 작성하세요.
                         테스트케이스 입력과 출력은 마크다운이나 라벨 없는 순수 값이어야 합니다.
                         """)
@@ -29,16 +33,48 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         새로운 알고리즘 문제를 하나 생성하세요.
                         문제 유형: {category}
                         난이도: {difficulty}
+                        유형별 출제 방향: {categoryGuide}
+                        난이도별 요구사항: {difficultyGuide}
                         생성 시드: {seed}
                         생성 시간: {now}
-                        유형이 '전체'이면 Greedy, DP, BFS, DFS 중 무작위로 선택하세요.
+                        유형이 '전체'이면 아래 유형 중 하나를 무작위로 선택하세요:
+                        구현/시뮬레이션, 스택/큐, 해시/정렬, 이분 탐색, 힙/우선순위 큐,
+                        완전탐색/백트래킹, 그래프, 문자열/파싱, Greedy, DP, BFS, DFS.
                         """)
                         .param("category", category)
                         .param("difficulty", difficulty)
+                        .param("categoryGuide", categoryGuide(category))
+                        .param("difficultyGuide", difficultyGuide(difficulty))
                         .param("seed", ThreadLocalRandom.current().nextInt(1, 1_000_001))
                         .param("now", LocalDateTime.now()))
                 .call()
                 .entity(ProblemInfo.class, spec -> spec.useProviderStructuredOutput().validateSchema());
+    }
+
+    private String categoryGuide(String category) {
+        return switch (category) {
+            case "구현/시뮬레이션" -> "상태 변화, 순서 의존성, 다단계 조건을 정확히 처리하세요.";
+            case "스택/큐" -> "LIFO/FIFO 또는 단조 스택·큐가 필요한 상황을 설계하세요.";
+            case "해시/정렬" -> "정렬 기준과 빈도·그룹화·중복 처리를 결합하세요.";
+            case "이분 탐색" -> "가능 여부 판정 함수와 탐색 범위를 설계해야 하도록 하세요.";
+            case "힙/우선순위 큐" -> "현재 최솟값·최댓값을 반복적으로 선택하는 과정을 포함하세요.";
+            case "완전탐색/백트래킹" -> "탐색 공간을 가지치기하거나 중복 상태를 제거해야 하도록 하세요.";
+            case "그래프" -> "간선, 연결 요소, 최단 경로 또는 위상 관계 중 하나를 활용하세요.";
+            case "문자열/파싱" -> "토큰화·구간·괄호·날짜 등 입력 해석과 자료구조 처리를 결합하세요.";
+            case "Greedy" -> "선택 기준의 타당성을 설명할 수 있고 반례를 고려하게 하세요.";
+            case "DP" -> "상태 정의와 전이식이 필요하며 단순 누적 문제가 아니도록 하세요.";
+            case "BFS", "DFS" -> "방문 처리와 상태 또는 경로 복원이 필요한 그래프 문제로 구성하세요.";
+            default -> "서로 다른 알고리즘 전략을 비교해야 하는 중급 문제로 구성하세요.";
+        };
+    }
+
+    private String difficultyGuide(String difficulty) {
+        return switch (difficulty) {
+            case "쉬움" -> "핵심 알고리즘 1개를 사용하되 경계 조건과 구현 실수를 유도하세요.";
+            case "보통" -> "핵심 알고리즘 1개와 자료구조 1개를 결합하고, N이 100,000 이상인 제한을 고려하세요.";
+            case "어려움" -> "두 가지 이상의 개념을 결합하고, 단순 O(N^2) 풀이가 시간 초과되도록 제한을 설정하세요.";
+            default -> "레벨 2~3 수준의 시간·공간 복잡도 판단이 필요한 문제로 구성하세요.";
+        };
     }
 
     @Override

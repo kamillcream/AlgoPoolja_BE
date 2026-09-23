@@ -25,7 +25,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class QuizService {
-    private static final Set<String> CATEGORIES = Set.of("전체", "Greedy", "DP", "BFS", "DFS");
+    private static final Set<String> CATEGORIES = Set.of(
+            "전체", "Greedy", "DP", "BFS", "DFS", "구현/시뮬레이션", "스택/큐",
+            "해시/정렬", "이분 탐색", "힙/우선순위 큐", "완전탐색/백트래킹", "그래프", "문자열/파싱");
     private static final Set<String> DIFFICULTIES = Set.of("쉬움", "보통", "어려움");
 
     private final AiQuizGenerator generator;
