@@ -2,6 +2,23 @@ let currentQuizId = null;
 const $ = id => document.getElementById(id);
 const requestOptions = options => ({credentials: 'include', ...options});
 
+async function loadAuthState() {
+  const generateButton = $('generate');
+  try {
+    const response = await fetch('/api/auth/me', requestOptions({method:'GET'}));
+    const user = await response.json();
+    if (!response.ok || !user.authenticated) {
+      generateButton.disabled = true;
+      $('status').textContent = '로그인 후 문제를 생성할 수 있습니다.';
+    }
+  } catch (error) {
+    generateButton.disabled = true;
+    $('status').textContent = '로그인 상태를 확인할 수 없습니다.';
+  }
+}
+
+loadAuthState();
+
 $('generate').addEventListener('click', async () => {
   $('generate').disabled = true;
   $('status').textContent = 'Spring AI가 새 문제를 생성하고 있습니다…';
