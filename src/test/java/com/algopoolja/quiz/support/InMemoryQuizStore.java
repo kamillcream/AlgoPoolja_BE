@@ -29,4 +29,19 @@ public class InMemoryQuizStore implements QuizStore {
 
     @Override
     public Optional<QuizSnapshot> findById(Long quizId) { return Optional.ofNullable(quizzes.get(quizId)); }
+
+    @Override
+    public List<QuizSnapshot> findByCategoryDifficultyAndLanguage(String category, String difficulty,
+                                                                    String language) {
+        return quizzes.values().stream()
+                .filter(quiz -> quiz.getCategory().equals(category)
+                        && quiz.getDifficulty().equals(switch (difficulty) {
+                            case "쉬움" -> "EASY";
+                            case "보통" -> "NORMAL";
+                            case "어려움" -> "HARD";
+                            default -> difficulty;
+                        })
+                        && quiz.getLanguage().equals(language))
+                .toList();
+    }
 }

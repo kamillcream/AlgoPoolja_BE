@@ -41,14 +41,34 @@ public class QuizService {
     private String generationStrategy;
 
     public GenerateResponse generate(String category, String difficulty) {
-        return generate(category, difficulty, "PYTHON");
+        return generate(category, difficulty, "PYTHON", null);
     }
 
     public GenerateResponse generate(String category, String difficulty, String language) {
+        return generate(category, difficulty, language, null);
+    }
+
+    public GenerateResponse generate(String category, String difficulty, String language, UserIdentity user) {
         long startedAt = System.nanoTime();
         if (!CATEGORIES.contains(category)) throw new IllegalArgumentException("지원하지 않는 문제 유형입니다.");
         if (!DIFFICULTIES.contains(difficulty)) throw new IllegalArgumentException("지원하지 않는 문제 난이도입니다.");
         language = normalizeLanguage(language);
+
+        String normalizedCategory = normalizeCategory(category);
+        if (user != null) {
+            Set<Long> attemptedQuizIds = learningStore.findAttempts(user.getUserId()).stream()
+                    .map(com.algopoolja.quiz.learning.QuizAttempt::getQuizId)
+                    .collect(java.util.stream.Collectors.toSet());
+            var reusable = quizStore.findByCategoryDifficultyAndLanguage(normalizedCategory, difficulty, language)
+                    .stream()
+                    .filter(quiz -> !attemptedQuizIds.contains(quiz.getQuizId()))
+                    .findFirst();
+            if (reusable.isPresent()) {
+                log.info("Reusing unattempted quiz: quizId={}, category={}, difficulty={}, language={}",
+                        reusable.get().getQuizId(), normalizedCategory, difficulty, language);
+                return toGenerateResponse(reusable.get());
+            }
+        }
 
         ProblemInfo problem;
         BlankQuizInfo blankQuiz;
@@ -81,7 +101,7 @@ public class QuizService {
                 .map(test -> new TestCase(tools.cleanTestcaseText(test.getInput()), tools.cleanTestcaseText(test.getOutput())))
                 .toList();
 
-        long id = quizStore.save(problem.getTitle(), problem.getDescription(), normalizeCategory(category),
+        long id = quizStore.save(problem.getTitle(), problem.getDescription(), normalizedCategory,
                 difficulty, language, problem.getCode(), blankCode, blocks.getCorrectAnswers(), choices, testCases,
                 problem.getHint(), problem.getExplanation(), problem.getAlgorithm(), problem.getTimeComplexity(),
                 problem.getSpaceComplexity(), problem.getCommonMistakes());
@@ -90,6 +110,13 @@ public class QuizService {
                 choices, blocks.getCorrectAnswers().size(), problem.getCode(), problem.getHint(),
                 problem.getExplanation(), problem.getAlgorithm(), problem.getTimeComplexity(),
                 problem.getSpaceComplexity(), problem.getCommonMistakes());
+    }
+
+    private GenerateResponse toGenerateResponse(QuizSnapshot quiz) {
+        return new GenerateResponse(quiz.getQuizId(), quiz.getLanguage(), quiz.getTitle(), quiz.getDescription(),
+                quiz.getTestcases(), quiz.getBlankCode(), quiz.getAnswerBlocks(), quiz.getCorrectAnswers().size(),
+                quiz.getAnswerCode(), quiz.getHint(), quiz.getExplanation(), quiz.getAlgorithm(),
+                quiz.getTimeComplexity(), quiz.getSpaceComplexity(), quiz.getCommonMistakes());
     }
 
     private BlankQuizInfo generateParallelPipeline(ProblemInfo problem) {

@@ -27,4 +27,9 @@ public interface QuizStore {
     }
 
     Optional<QuizSnapshot> findById(Long quizId);
+
+    default List<QuizSnapshot> findByCategoryDifficultyAndLanguage(String category, String difficulty,
+                                                                     String language) {
+        return List.of();
+    }
 }

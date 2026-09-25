@@ -57,6 +57,14 @@ public class JpaQuizStore implements QuizStore {
         return quizRepository.findById(quizId).map(this::toSnapshot);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<QuizSnapshot> findByCategoryDifficultyAndLanguage(String category, String difficulty,
+                                                                   String language) {
+        return quizRepository.findByCategoryAndDifficultyAndLanguageOrderByCreatedAtAsc(category, difficulty, language)
+                .stream().map(this::toSnapshot).toList();
+    }
+
     private QuizSnapshot toSnapshot(QuizEntity quiz) {
         List<TestCase> tests = quiz.getTestCases().stream()
                 .map(test -> new TestCase(test.getInput(), test.getExpectedOutput()))

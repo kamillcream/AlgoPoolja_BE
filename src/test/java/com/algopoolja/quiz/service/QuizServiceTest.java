@@ -60,4 +60,28 @@ class QuizServiceTest {
         assertThat(quiz.getAnswerBlocks()).contains("a + b");
         assertThat(quiz.getAnswerBlocks()).contains("a - b");
     }
+
+    @Test
+    void reusesAnUnattemptedQuizForTheSameUserAndSelection() {
+        AiQuizGenerator fake = new AiQuizGenerator() {
+            public ProblemInfo createProblem(String c, String d) {
+                return new ProblemInfo("합", "두 수의 합",
+                        List.of(new TestCase("1 2", "3"), new TestCase("2 3", "5")),
+                        "def solution(a, b):\n    return a + b");
+            }
+
+            public String createBlankCode(String code) { return "def solution(a, b):\n    return <BLANK>"; }
+            public AnswerBlockInfo createAnswerBlocks(String a, String b) {
+                return new AnswerBlockInfo(List.of("a + b"), List.of("a - b"));
+            }
+        };
+        InMemoryQuizStore quizzes = new InMemoryQuizStore();
+        QuizService service = new QuizService(fake, new QuizTools(), new InMemoryLearningStore(), quizzes);
+        UserIdentity user = new UserIdentity(99L, "테스트");
+
+        var first = service.generate("전체", "쉬움", "PYTHON", user);
+        var second = service.generate("전체", "쉬움", "PYTHON", user);
+
+        assertThat(second.getQuizId()).isEqualTo(first.getQuizId());
+    }
 }
