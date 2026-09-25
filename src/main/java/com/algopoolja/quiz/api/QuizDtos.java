@@ -22,6 +22,8 @@ public final class QuizDtos {
         private String category;
         @NotBlank
         private String difficulty;
+        @NotBlank
+        private String language = "PYTHON";
     }
 
     @Getter
@@ -30,6 +32,7 @@ public final class QuizDtos {
     @AllArgsConstructor
     public static class GenerateResponse {
         private Long quizId;
+        private String language;
         private String title;
         private String description;
         private List<TestCase> testcases;
@@ -51,6 +54,7 @@ public final class QuizDtos {
     @AllArgsConstructor
     public static class QuizDetailResponse {
         private Long quizId;
+        private String language;
         private String title;
         private String description;
         private String category;
@@ -59,6 +63,7 @@ public final class QuizDtos {
         private String blankCode;
         private List<String> answerBlocks;
         private int blankCount;
+        private String answerCode;
         private String hint;
         private String explanation;
         private String algorithm;

@@ -22,6 +22,7 @@ public class QuizEntity {
     @Column(nullable = false, columnDefinition = "text") private String description;
     @Column(nullable = false, length = 50) private String category;
     @Column(nullable = false, length = 20) private String difficulty;
+    @Column(nullable = false, length = 20, columnDefinition = "varchar(20) default 'PYTHON'") private String language;
     @Column(name = "answer_code", nullable = false, columnDefinition = "text") private String answerCode;
     @Column(name = "blank_code", nullable = false, columnDefinition = "text") private String blankCode;
     @Column(columnDefinition = "text") private String hint;
@@ -62,10 +63,21 @@ public class QuizEntity {
                       List<String> answerBlocks, String contentHash, UserEntity createdBy,
                       String hint, String explanation, String algorithm, String timeComplexity,
                       String spaceComplexity, List<String> commonMistakes) {
+        this(title, description, category, difficulty, "PYTHON", answerCode, blankCode, correctAnswers,
+                answerBlocks, contentHash, createdBy, hint, explanation, algorithm, timeComplexity,
+                spaceComplexity, commonMistakes);
+    }
+
+    public QuizEntity(String title, String description, String category, String difficulty, String language,
+                      String answerCode, String blankCode, List<String> correctAnswers,
+                      List<String> answerBlocks, String contentHash, UserEntity createdBy,
+                      String hint, String explanation, String algorithm, String timeComplexity,
+                      String spaceComplexity, List<String> commonMistakes) {
         this.title = title;
         this.description = description;
         this.category = category;
         this.difficulty = difficulty;
+        this.language = language;
         this.answerCode = answerCode;
         this.blankCode = blankCode;
         this.correctAnswers = List.copyOf(correctAnswers);

@@ -17,6 +17,11 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
 
     @Override
     public ProblemInfo createProblem(String category, String difficulty) {
+        return createProblem(category, difficulty, "PYTHON");
+    }
+
+    @Override
+    public ProblemInfo createProblem(String category, String difficulty, String language) {
         return chatClient.prompt()
                 .system("""
                         당신은 알고리즘 코딩테스트 문제 생성기입니다.
@@ -25,19 +30,21 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         단순한 문법·반복문 문제는 피하고, 자료구조 선택과 알고리즘 설계가 필요한 문제를 만드세요.
                         문제 설명에는 입력 제한, 출력 형식, 시간 복잡도에 영향을 주는 조건을 포함하세요.
                         테스트케이스는 예제뿐 아니라 중복값, 최소·최대 경계, 불가능한 경우를 포함해 3개 이상 만드세요.
-                        문제 설명, 테스트케이스, Python 정답 코드를 만드세요.
+                        문제 설명, 테스트케이스, 요청한 언어의 정답 코드를 만드세요.
                         hint에는 정답 코드를 직접 노출하지 않는 단계별 힌트를 1~2문장으로 작성하세요.
                         explanation에는 알고리즘 선택 이유와 풀이 과정을 작성하세요.
                         algorithm에는 대표 알고리즘 또는 자료구조 이름을 작성하세요.
                         timeComplexity와 spaceComplexity에는 Big-O 표기법을 작성하세요.
                         commonMistakes에는 학습자가 자주 하는 실수를 2~4개 작성하세요.
-                        정답 코드는 반드시 하나의 solution 함수로 작성하세요.
+                        정답 코드는 언어별 규칙에 맞는 하나의 solution 진입점으로 작성하세요.
                         테스트케이스 입력과 출력은 마크다운이나 라벨 없는 순수 값이어야 합니다.
                         """)
                 .user(u -> u.text("""
                         새로운 알고리즘 문제를 하나 생성하세요.
                         문제 유형: {category}
                         난이도: {difficulty}
+                        구현 언어: {language}
+                        언어별 구현 규칙: {languageGuide}
                         유형별 출제 방향: {categoryGuide}
                         난이도별 요구사항: {difficultyGuide}
                         생성 시드: {seed}
@@ -48,12 +55,23 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         """)
                         .param("category", category)
                         .param("difficulty", difficulty)
+                        .param("language", language)
+                        .param("languageGuide", languageGuide(language))
                         .param("categoryGuide", categoryGuide(category))
                         .param("difficultyGuide", difficultyGuide(difficulty))
                         .param("seed", ThreadLocalRandom.current().nextInt(1, 1_000_001))
                         .param("now", LocalDateTime.now()))
                 .call()
                 .entity(ProblemInfo.class, spec -> spec.useProviderStructuredOutput().validateSchema());
+    }
+
+    private String languageGuide(String language) {
+        return switch (language) {
+            case "JAVASCRIPT" -> "Node.js 20 기준. 하나의 solution 함수로 작성하고 마지막에 호출하지 마세요. 표준 입력/출력 코드는 사용하지 마세요.";
+            case "JAVA" -> "Java 17 기준. public class Solution 안에 public static 메서드 solution을 작성하세요. 패키지와 main 메서드는 넣지 마세요.";
+            case "CPP" -> "C++17 기준. class Solution 안에 public 메서드 solution을 작성하세요. main 함수와 입출력 코드는 넣지 마세요.";
+            default -> "Python 3 기준. 하나의 solution 함수로 작성하고 표준 입력/출력 코드는 사용하지 마세요.";
+        };
     }
 
     private String categoryGuide(String category) {
@@ -132,11 +150,16 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
 
     @Override
     public FullQuizInfo createFullQuiz(String category, String difficulty) {
+        return createFullQuiz(category, difficulty, "PYTHON");
+    }
+
+    @Override
+    public FullQuizInfo createFullQuiz(String category, String difficulty, String language) {
         return chatClient.prompt()
                 .system("""
                         당신은 알고리즘 코딩테스트 문제와 빈칸 학습 콘텐츠를 함께 만드는 생성기입니다.
-                        문제 설명, 테스트케이스 2개 이상, Python 정답 코드를 생성하세요.
-                        정답 코드는 하나의 solution 함수로 작성하세요.
+                        문제 설명, 테스트케이스 2개 이상, 요청한 언어의 정답 코드를 생성하세요.
+                        정답 코드는 언어별 규칙에 맞는 하나의 solution 진입점으로 작성하세요.
                         blankCode는 원본 코드의 줄 수, 들여쓰기, 줄 순서를 유지하고 핵심 표현식 1~5개만 <BLANK>로 바꾸세요.
                         correctAnswers에는 빈칸 정답을 순서대로, wrongAnswers에는 비슷하지만 틀린 코드 조각을 3~6개 넣으세요.
                         테스트케이스 입력과 출력은 라벨이나 마크다운 없는 순수 값이어야 합니다.
@@ -148,11 +171,15 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         알고리즘 문제와 빈칸 학습 콘텐츠를 하나 생성하세요.
                         문제 유형: {category}
                         난이도: {difficulty}
+                        구현 언어: {language}
+                        언어별 구현 규칙: {languageGuide}
                         생성 시드: {seed}
                         생성 시간: {now}
                         """)
                         .param("category", category)
                         .param("difficulty", difficulty)
+                        .param("language", language)
+                        .param("languageGuide", languageGuide(language))
                         .param("seed", ThreadLocalRandom.current().nextInt(1, 1_000_001))
                         .param("now", LocalDateTime.now()))
                 .call()

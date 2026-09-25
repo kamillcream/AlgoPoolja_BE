@@ -29,7 +29,7 @@ public class QuizController {
     public GenerateResponse generate(@Valid @RequestBody GenerateRequest request,
                                      HttpServletRequest servletRequest) {
         currentUserProvider.requireCurrentUser(servletRequest);
-        return service.generate(request.getCategory(), request.getDifficulty());
+        return service.generate(request.getCategory(), request.getDifficulty(), request.getLanguage());
     }
 
     @PostMapping("/{quizId}/check")
@@ -42,9 +42,9 @@ public class QuizController {
     @GetMapping("/{quizId}")
     public QuizDetailResponse getQuiz(@PathVariable Long quizId) {
         QuizSnapshot quiz = service.getQuiz(quizId);
-        return new QuizDetailResponse(quiz.getQuizId(), quiz.getTitle(), quiz.getDescription(), quiz.getCategory(),
+        return new QuizDetailResponse(quiz.getQuizId(), quiz.getLanguage(), quiz.getTitle(), quiz.getDescription(), quiz.getCategory(),
                 quiz.getDifficulty(), quiz.getTestcases(), quiz.getBlankCode(), quiz.getAnswerBlocks(),
-                quiz.getCorrectAnswers().size(), quiz.getHint(), quiz.getExplanation(), quiz.getAlgorithm(),
+                quiz.getCorrectAnswers().size(), quiz.getAnswerCode(), quiz.getHint(), quiz.getExplanation(), quiz.getAlgorithm(),
                 quiz.getTimeComplexity(), quiz.getSpaceComplexity(), quiz.getCommonMistakes());
     }
 }

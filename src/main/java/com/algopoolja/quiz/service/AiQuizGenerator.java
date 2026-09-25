@@ -8,6 +8,10 @@ import com.algopoolja.quiz.domain.ProblemInfo;
 public interface AiQuizGenerator {
     ProblemInfo createProblem(String category, String difficulty);
 
+    default ProblemInfo createProblem(String category, String difficulty, String language) {
+        return createProblem(category, difficulty);
+    }
+
     String createBlankCode(String answerCode);
     AnswerBlockInfo createAnswerBlocks(String answerCode, String blankCode);
 
@@ -19,6 +23,13 @@ public interface AiQuizGenerator {
 
     default FullQuizInfo createFullQuiz(String category, String difficulty) {
         ProblemInfo problem = createProblem(category, difficulty);
+        BlankQuizInfo blankQuiz = createBlankQuiz(problem.getCode());
+        return new FullQuizInfo(problem.getTitle(), problem.getDescription(), problem.getTestcases(),
+                problem.getCode(), blankQuiz.getBlankCode(), blankQuiz.getCorrectAnswers(), blankQuiz.getWrongAnswers());
+    }
+
+    default FullQuizInfo createFullQuiz(String category, String difficulty, String language) {
+        ProblemInfo problem = createProblem(category, difficulty, language);
         BlankQuizInfo blankQuiz = createBlankQuiz(problem.getCode());
         return new FullQuizInfo(problem.getTitle(), problem.getDescription(), problem.getTestcases(),
                 problem.getCode(), blankQuiz.getBlankCode(), blankQuiz.getCorrectAnswers(), blankQuiz.getWrongAnswers());
