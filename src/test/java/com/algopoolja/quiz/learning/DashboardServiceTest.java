@@ -53,11 +53,11 @@ class DashboardServiceTest {
             public ProblemInfo createProblem(String category, String difficulty) {
                 return new ProblemInfo("최소 동전 조합", "설명", List.of(
                         new TestCase("1", "1"), new TestCase("2", "2")),
-                        "def solution(a, b):\n    return a + b");
+                        "def solution(a, b):\n    return a + b + 0");
             }
-            public String createBlankCode(String code) { return "def solution(a, b):\n    return <BLANK>"; }
+            public String createBlankCode(String code) { return "def solution(a, b):\n    return <BLANK> + <BLANK> + <BLANK>"; }
             public AnswerBlockInfo createAnswerBlocks(String answer, String blank) {
-                return new AnswerBlockInfo(List.of("a + b"), List.of("a - b", "a * b", "a / b"));
+                return new AnswerBlockInfo(List.of("a", "b", "0"), List.of("a - b", "a * b", "a / b"));
             }
         };
     }

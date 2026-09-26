@@ -194,14 +194,15 @@ public class QuizService {
     public CheckResponse check(Long id, List<String> answers, OffsetDateTime startedAt, UserIdentity user) {
         QuizSnapshot quiz = getQuiz(id);
         if (answers.size() != quiz.getCorrectAnswers().size()) {
-            throw new IllegalArgumentException("빈칸 %d개를 모두 선택해주세요.".formatted(quiz.getCorrectAnswers().size()));
+            throw new IllegalArgumentException("빈칸 %d개에 모두 답을 입력해주세요.".formatted(quiz.getCorrectAnswers().size()));
         }
+        List<String> normalizedAnswers = answers.stream().map(String::strip).toList();
         String completed = quiz.getBlankCode();
-        for (String answer : answers) {
+        for (String answer : normalizedAnswers) {
             completed = completed.replaceFirst("<BLANK>", java.util.regex.Matcher.quoteReplacement(answer));
         }
-        boolean correct = answers.equals(quiz.getCorrectAnswers()) || completed.strip().equals(quiz.getAnswerCode().strip());
-        var attempt = learningStore.saveAttempt(user, id, answers, correct, startedAt,
+        boolean correct = normalizedAnswers.equals(quiz.getCorrectAnswers()) || completed.strip().equals(quiz.getAnswerCode().strip());
+        var attempt = learningStore.saveAttempt(user, id, normalizedAnswers, correct, startedAt,
                 OffsetDateTime.now(ZoneId.of("Asia/Seoul")));
         return new CheckResponse(attempt.getAttemptId(), correct,
                 correct ? "정답입니다." : "다시 확인해보세요.", attempt.getAttemptNumber(),

@@ -16,15 +16,15 @@ class QuizServiceTest {
     @Test
     void generatesAndChecksQuiz() {
         AiQuizGenerator fake = new AiQuizGenerator() {
-            public ProblemInfo createProblem(String c, String d) { return new ProblemInfo("합", "두 수의 합", List.of(new TestCase("입력: 1 2", "3"), new TestCase("2 3", "5")), "def solution(a, b):\n    return a + b"); }
-            public String createBlankCode(String code) { return "def solution(a, b):\n    return <BLANK>"; }
-            public AnswerBlockInfo createAnswerBlocks(String a, String b) { return new AnswerBlockInfo(List.of("a + b"), List.of("a - b", "a * b", "a / b")); }
+            public ProblemInfo createProblem(String c, String d) { return new ProblemInfo("합", "두 수의 합", List.of(new TestCase("입력: 1 2", "3"), new TestCase("2 3", "5")), "def solution(a, b):\n    return a + b + 0"); }
+            public String createBlankCode(String code) { return "def solution(a, b):\n    return <BLANK> + <BLANK> + <BLANK>"; }
+            public AnswerBlockInfo createAnswerBlocks(String a, String b) { return new AnswerBlockInfo(List.of("a", "b", "0"), List.of("a - b", "a * b", "a / b")); }
         };
         QuizService service = new QuizService(fake, new QuizTools(),
                 new InMemoryLearningStore(), new InMemoryQuizStore());
         var quiz = service.generate("전체", "쉬움");
         OffsetDateTime startedAt = OffsetDateTime.now().minusSeconds(184);
-        var result = service.check(quiz.getQuizId(), List.of("a + b"), startedAt,
+        var result = service.check(quiz.getQuizId(), List.of("a", "b", "0"), startedAt,
                 new UserIdentity(12L, "알고풀자"));
         assertThat(quiz.getTestcases().getFirst().getInput()).isEqualTo("1 2");
         assertThat(result.isCorrect()).isTrue();
@@ -39,15 +39,15 @@ class QuizServiceTest {
             public ProblemInfo createProblem(String c, String d) {
                 return new ProblemInfo("합", "두 수의 합",
                         List.of(new TestCase("입력: 1 2", "3"), new TestCase("2 3", "5")),
-                        "def solution(a, b):\n    return a + b");
+                        "def solution(a, b):\n    return a + b + 0");
             }
 
             public String createBlankCode(String code) {
-                return "def solution(a, b):\n    return <BLANK>";
+                return "def solution(a, b):\n    return <BLANK> + <BLANK> + <BLANK>";
             }
 
             public AnswerBlockInfo createAnswerBlocks(String a, String b) {
-                return new AnswerBlockInfo(List.of("a + b"), List.of("a - b"));
+                return new AnswerBlockInfo(List.of("a", "b", "0"), List.of("a - b"));
             }
         };
         QuizService service = new QuizService(fake, new QuizTools(),
@@ -56,9 +56,9 @@ class QuizServiceTest {
 
         var quiz = service.generate("전체", "쉬움");
 
-        assertThat(quiz.getBlankCount()).isEqualTo(1);
-        assertThat(quiz.getAnswerBlocks()).contains("a + b");
-        assertThat(quiz.getAnswerBlocks()).contains("a - b");
+        assertThat(quiz.getBlankCount()).isEqualTo(3);
+        assertThat(quiz.getAnswerBlocks()).contains("a");
+        assertThat(quiz.getAnswerBlocks()).contains("a + 1");
     }
 
     @Test
@@ -67,12 +67,12 @@ class QuizServiceTest {
             public ProblemInfo createProblem(String c, String d) {
                 return new ProblemInfo("합", "두 수의 합",
                         List.of(new TestCase("1 2", "3"), new TestCase("2 3", "5")),
-                        "def solution(a, b):\n    return a + b");
+                        "def solution(a, b):\n    return a + b + 0");
             }
 
-            public String createBlankCode(String code) { return "def solution(a, b):\n    return <BLANK>"; }
+            public String createBlankCode(String code) { return "def solution(a, b):\n    return <BLANK> + <BLANK> + <BLANK>"; }
             public AnswerBlockInfo createAnswerBlocks(String a, String b) {
-                return new AnswerBlockInfo(List.of("a + b"), List.of("a - b"));
+                return new AnswerBlockInfo(List.of("a", "b", "0"), List.of("a - b"));
             }
         };
         InMemoryQuizStore quizzes = new InMemoryQuizStore();
