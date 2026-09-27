@@ -106,7 +106,7 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                 .system("""
                         당신은 알고리즘 문제 빈칸 생성기입니다.
                         원본 줄 수, 들여쓰기, 줄 순서를 유지하세요. 줄 전체를 삭제하면 안 됩니다.
-                        핵심 값이나 표현식 3~8개를 정확히 <BLANK>로 바꾸세요.
+                        핵심 값이나 표현식을 3개 이상 정확히 <BLANK>로 바꾸세요.
                         할당문의 왼쪽과 =, return/if/for/while 키워드는 유지하세요.
                         설명, 마크다운, 주석은 추가하지 마세요.
                         """)
@@ -137,7 +137,7 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                 .system("""
                         당신은 알고리즘 빈칸 학습 콘텐츠 생성기입니다.
                         원본 코드의 줄 수, 들여쓰기, 줄 순서를 유지하세요.
-                        핵심 값이나 표현식 3~8개를 정확히 <BLANK>로 바꾸세요.
+                        핵심 값이나 표현식을 3개 이상 정확히 <BLANK>로 바꾸세요.
                         blankCode에는 설명, 마크다운, 주석을 추가하지 마세요.
                         correctAnswers에는 <BLANK>의 정답 코드 조각을 순서대로 넣으세요.
                         wrongAnswers에는 정답과 비슷하지만 틀린 코드 조각을 3~6개 넣으세요.
@@ -160,7 +160,7 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         당신은 알고리즘 코딩테스트 문제와 빈칸 학습 콘텐츠를 함께 만드는 생성기입니다.
                         문제 설명, 테스트케이스 2개 이상, 요청한 언어의 정답 코드를 생성하세요.
                         정답 코드는 언어별 규칙에 맞는 하나의 solution 진입점으로 작성하세요.
-                        blankCode는 원본 코드의 줄 수, 들여쓰기, 줄 순서를 유지하고 핵심 표현식 3~8개를 <BLANK>로 바꾸세요.
+                        blankCode는 원본 코드의 줄 수, 들여쓰기, 줄 순서를 유지하고 핵심 표현식을 3개 이상 <BLANK>로 바꾸세요.
                         correctAnswers에는 빈칸 정답을 순서대로, wrongAnswers에는 비슷하지만 틀린 코드 조각을 3~6개 넣으세요.
                         테스트케이스 입력과 출력은 라벨이나 마크다운 없는 순수 값이어야 합니다.
                         설명이나 마크다운은 필드 값에 추가하지 마세요.

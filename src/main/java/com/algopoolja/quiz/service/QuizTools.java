@@ -29,12 +29,11 @@ public class QuizTools {
         return String.join("\n", cleaned);
     }
 
-    @Tool(description = "빈칸 수가 3~8개이고 정답 블록 수와 같은지 검증합니다")
+    @Tool(description = "빈칸이 1개 이상이고 정답 블록 수와 같은지 검증합니다")
     public String validateBlankCount(String blankCode, List<String> correctAnswers) {
         int count = countBlanks(blankCode);
         if (count == 0) return "ERROR: 빈칸이 없습니다.";
         if (count < 3) return "ERROR: 빈칸은 최소 3개여야 합니다.";
-        if (count > 8) return "ERROR: 빈칸이 8개를 초과했습니다.";
         if (correctAnswers == null || count != correctAnswers.size()) {
             return "ERROR: 빈칸은 %d개인데 정답 블록은 %d개입니다."
                     .formatted(count, correctAnswers == null ? 0 : correctAnswers.size());

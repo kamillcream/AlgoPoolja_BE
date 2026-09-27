@@ -16,6 +16,8 @@ class QuizToolsTest {
     @Test
     void validatesBlankAndAnswerCounts() {
         assertThat(tools.validateBlankCount("return <BLANK> + <BLANK> + <BLANK>", List.of("a", "b", "0"))).isEqualTo("OK");
+        assertThat(tools.validateBlankCount("return <BLANK> + <BLANK> + <BLANK> + <BLANK> + <BLANK> + <BLANK> + <BLANK> + <BLANK> + <BLANK>",
+                List.of("a", "b", "c", "d", "e", "f", "g", "h", "i"))).isEqualTo("OK");
         assertThat(tools.validateBlankCount("return <BLANK>", List.of("a", "b"))).startsWith("ERROR:");
     }
 
