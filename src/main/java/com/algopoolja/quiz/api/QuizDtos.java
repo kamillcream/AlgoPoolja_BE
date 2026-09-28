@@ -1,6 +1,7 @@
 package com.algopoolja.quiz.api;
 
 import com.algopoolja.quiz.domain.TestCase;
+import com.algopoolja.quiz.domain.ProblemInfo;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
@@ -43,8 +44,10 @@ public final class QuizDtos {
         private String hint;
         private String explanation;
         private String algorithm;
+        private String estimatedLevel;
         private String timeComplexity;
         private String spaceComplexity;
+        private List<String> requiredTechniques;
         private List<String> commonMistakes;
     }
 

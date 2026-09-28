@@ -28,8 +28,13 @@ public class QuizEntity {
     @Column(columnDefinition = "text") private String hint;
     @Column(columnDefinition = "text") private String explanation;
     @Column(length = 100) private String algorithm;
+    @Column(name = "estimated_level", length = 30) private String estimatedLevel;
     @Column(name = "time_complexity", length = 100) private String timeComplexity;
     @Column(name = "space_complexity", length = 100) private String spaceComplexity;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "required_techniques", columnDefinition = "jsonb")
+    private List<String> requiredTechniques;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "common_mistakes", columnDefinition = "jsonb")
@@ -65,7 +70,7 @@ public class QuizEntity {
                       String spaceComplexity, List<String> commonMistakes) {
         this(title, description, category, difficulty, "PYTHON", answerCode, blankCode, correctAnswers,
                 answerBlocks, contentHash, createdBy, hint, explanation, algorithm, timeComplexity,
-                spaceComplexity, commonMistakes);
+                spaceComplexity, commonMistakes, null, List.of());
     }
 
     public QuizEntity(String title, String description, String category, String difficulty, String language,
@@ -73,6 +78,17 @@ public class QuizEntity {
                       List<String> answerBlocks, String contentHash, UserEntity createdBy,
                       String hint, String explanation, String algorithm, String timeComplexity,
                       String spaceComplexity, List<String> commonMistakes) {
+        this(title, description, category, difficulty, language, answerCode, blankCode, correctAnswers,
+                answerBlocks, contentHash, createdBy, hint, explanation, algorithm, null, timeComplexity,
+                spaceComplexity, List.of(), commonMistakes);
+    }
+
+    public QuizEntity(String title, String description, String category, String difficulty, String language,
+                      String answerCode, String blankCode, List<String> correctAnswers,
+                      List<String> answerBlocks, String contentHash, UserEntity createdBy,
+                      String hint, String explanation, String algorithm, String estimatedLevel,
+                      String timeComplexity, String spaceComplexity, List<String> requiredTechniques,
+                      List<String> commonMistakes) {
         this.title = title;
         this.description = description;
         this.category = category;
@@ -87,8 +103,10 @@ public class QuizEntity {
         this.hint = hint;
         this.explanation = explanation;
         this.algorithm = algorithm;
+        this.estimatedLevel = estimatedLevel;
         this.timeComplexity = timeComplexity;
         this.spaceComplexity = spaceComplexity;
+        this.requiredTechniques = requiredTechniques == null ? List.of() : List.copyOf(requiredTechniques);
         this.commonMistakes = commonMistakes == null ? List.of() : List.copyOf(commonMistakes);
     }
 

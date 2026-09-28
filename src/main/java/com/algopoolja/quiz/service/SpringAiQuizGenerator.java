@@ -37,7 +37,9 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         hint에는 정답 코드를 직접 노출하지 않는 단계별 힌트를 1~2문장으로 작성하세요.
                         explanation에는 알고리즘 선택 이유와 풀이 과정을 작성하세요.
                         algorithm에는 대표 알고리즘 또는 자료구조 이름을 작성하세요.
+                        estimatedLevel에는 반드시 '프로그래머스 Lv.1'부터 '프로그래머스 Lv.4' 중 하나를 작성하세요.
                         timeComplexity와 spaceComplexity에는 Big-O 표기법을 작성하세요.
+                        requiredTechniques에는 문제 풀이에 실제로 필요한 알고리즘 기법을 작성하세요.
                         commonMistakes에는 학습자가 자주 하는 실수를 2~4개 작성하세요.
                         정답 코드는 언어별 규칙에 맞는 하나의 solution 진입점으로 작성하세요.
                         테스트케이스 입력과 출력은 마크다운이나 라벨 없는 순수 값이어야 합니다.
@@ -50,6 +52,7 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         언어별 구현 규칙: {languageGuide}
                         유형별 출제 방향: {categoryGuide}
                         난이도별 요구사항: {difficultyGuide}
+                        카테고리를 난이도보다 우선하세요. 요청한 유형이 '전체'가 아니면 algorithm은 반드시 요청 유형과 일치해야 합니다.
                         생성 시드: {seed}
                         생성 시간: {now}
                         유형이 '전체'이면 아래 유형 중 하나를 무작위로 선택하세요:
@@ -96,9 +99,9 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
 
     private String difficultyGuide(String difficulty) {
         return switch (difficulty) {
-            case "쉬움" -> "핵심 알고리즘 1개를 사용하되 경계 조건과 구현 실수를 유도하세요.";
-            case "보통" -> "핵심 알고리즘 1개와 자료구조 1개를 결합하고, N이 100,000 이상인 제한을 고려하세요.";
-            case "어려움" -> "두 가지 이상의 개념을 결합하고, 단순 O(N^2) 풀이가 시간 초과되도록 제한을 설정하세요.";
+            case "쉬움" -> "프로그래머스 Lv.1~2. 핵심 알고리즘 1개를 사용하되 경계 조건과 구현 실수를 유도하세요.";
+            case "보통" -> "프로그래머스 Lv.2~3. 핵심 알고리즘 1개와 자료구조 1개를 결합하고, N이 100,000 이상인 제한을 고려하세요.";
+            case "어려움" -> "프로그래머스 Lv.3~4. 두 가지 이상의 개념을 결합하고, 단순 O(N^2) 풀이가 시간 초과되도록 제한을 설정하세요.";
             default -> "레벨 2~3 수준의 시간·공간 복잡도 판단이 필요한 문제로 구성하세요.";
         };
     }
@@ -183,14 +186,17 @@ public class SpringAiQuizGenerator implements AiQuizGenerator {
                         correctAnswers에는 빈칸 정답을 순서대로, wrongAnswers에는 비슷하지만 틀린 코드 조각을 3~6개 넣으세요.
                         테스트케이스 입력과 출력은 라벨이나 마크다운 없는 순수 값이어야 합니다.
                         설명이나 마크다운은 필드 값에 추가하지 마세요.
-                        hint, explanation, algorithm, timeComplexity, spaceComplexity,
-                        commonMistakes 필드도 문제와 함께 생성하세요.
+                        hint, explanation, algorithm, estimatedLevel(프로그래머스 Lv.1~4),
+                        timeComplexity, spaceComplexity, requiredTechniques, commonMistakes
+                        필드도 문제와 함께 생성하세요.
                         """)
                 .user(u -> u.text("""
                         알고리즘 문제와 빈칸 학습 콘텐츠를 하나 생성하세요.
                         문제 유형: {category}
                         난이도: {difficulty}
                         구현 언어: {language}
+                        카테고리를 난이도보다 우선하고, 요청 유형이 전체가 아니면 algorithm을 요청 유형과 일치시키세요.
+                        estimatedLevel은 프로그래머스 Lv.1~4 중 난이도에 맞게 선택하세요.
                         언어별 구현 규칙: {languageGuide}
                         생성 시드: {seed}
                         생성 시간: {now}

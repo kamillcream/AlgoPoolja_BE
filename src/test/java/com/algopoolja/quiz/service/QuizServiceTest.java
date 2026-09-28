@@ -1,7 +1,9 @@
 package com.algopoolja.quiz.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.algopoolja.quiz.domain.AnswerBlockInfo;
+import com.algopoolja.quiz.domain.DifficultyMetadata;
 import com.algopoolja.quiz.domain.ProblemInfo;
 import com.algopoolja.quiz.domain.TestCase;
 import com.algopoolja.quiz.learning.UserIdentity;
@@ -83,5 +85,28 @@ class QuizServiceTest {
         var second = service.generate("전체", "쉬움", "PYTHON", user);
 
         assertThat(second.getQuizId()).isEqualTo(first.getQuizId());
+    }
+
+    @Test
+    void rejectsWrongCategoryAfterThreeGenerationAttempts() {
+        int[] attempts = {0};
+        AiQuizGenerator fake = new AiQuizGenerator() {
+            public ProblemInfo createProblem(String c, String d) {
+                attempts[0]++;
+                return new ProblemInfo("합", "두 수의 합", List.of(
+                        new TestCase("1 2", "3"), new TestCase("2 3", "5")),
+                        "def solution(a, b):\n    return a + b",
+                        new DifficultyMetadata("Greedy", "Lv.3", "O(N)", "O(1)", List.of("정렬")));
+            }
+            public String createBlankCode(String code) { throw new AssertionError("검증 실패 전에 빈칸 생성을 호출하면 안 됩니다."); }
+            public AnswerBlockInfo createAnswerBlocks(String a, String b) { throw new AssertionError(); }
+        };
+
+        QuizService service = new QuizService(fake, new QuizTools());
+
+        assertThatThrownBy(() -> service.generate("DP", "어려움"))
+                .isInstanceOf(QuizGenerationException.class)
+                .hasMessageContaining("생성하지 못했습니다");
+        assertThat(attempts[0]).isEqualTo(3);
     }
 }

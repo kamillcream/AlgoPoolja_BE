@@ -14,7 +14,10 @@ import com.algopoolja.quiz.persistence.QuizStore;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +33,7 @@ public class QuizService {
             "해시/정렬", "이분 탐색", "힙/우선순위 큐", "완전탐색/백트래킹", "그래프", "문자열/파싱");
     private static final Set<String> DIFFICULTIES = Set.of("쉬움", "보통", "어려움");
     private static final Set<String> LANGUAGES = Set.of("PYTHON", "JAVASCRIPT", "JAVA", "CPP");
+    private static final Pattern LEVEL_PATTERN = Pattern.compile("(?:LV\\.?\\s*)?(\\d+)", Pattern.CASE_INSENSITIVE);
 
     private final AiQuizGenerator generator;
     private final QuizTools tools;
@@ -91,6 +95,7 @@ public class QuizService {
             }
         }
         requireValidProblem(problem);
+        validateDifficultyMetadata(problem, category, difficulty);
         String blankCode = blankQuiz.getBlankCode();
         AnswerBlockInfo blocks = new AnswerBlockInfo(blankQuiz.getCorrectAnswers(), blankQuiz.getWrongAnswers());
         String validation = tools.validateBlankCount(blankCode, blocks.getCorrectAnswers());
@@ -103,20 +108,23 @@ public class QuizService {
 
         long id = quizStore.save(problem.getTitle(), problem.getDescription(), normalizedCategory,
                 difficulty, language, problem.getCode(), blankCode, blocks.getCorrectAnswers(), choices, testCases,
-                problem.getHint(), problem.getExplanation(), problem.getAlgorithm(), problem.getTimeComplexity(),
-                problem.getSpaceComplexity(), problem.getCommonMistakes());
+                problem.getHint(), problem.getExplanation(), problem.getAlgorithm(), problem.getEstimatedLevel(),
+                problem.getTimeComplexity(), problem.getSpaceComplexity(), problem.getRequiredTechniques(),
+                problem.getCommonMistakes());
         log.info("Quiz generation completed: strategy={}, totalMs={}", generationStrategy, elapsedMillis(startedAt));
         return new GenerateResponse(id, language, problem.getTitle(), problem.getDescription(), testCases, blankCode,
                 choices, blocks.getCorrectAnswers().size(), problem.getCode(), problem.getHint(),
-                problem.getExplanation(), problem.getAlgorithm(), problem.getTimeComplexity(),
-                problem.getSpaceComplexity(), problem.getCommonMistakes());
+                problem.getExplanation(), problem.getAlgorithm(), problem.getEstimatedLevel(),
+                problem.getTimeComplexity(), problem.getSpaceComplexity(), problem.getRequiredTechniques(),
+                problem.getCommonMistakes());
     }
 
     private GenerateResponse toGenerateResponse(QuizSnapshot quiz) {
         return new GenerateResponse(quiz.getQuizId(), quiz.getLanguage(), quiz.getTitle(), quiz.getDescription(),
                 quiz.getTestcases(), quiz.getBlankCode(), quiz.getAnswerBlocks(), quiz.getCorrectAnswers().size(),
                 quiz.getAnswerCode(), quiz.getHint(), quiz.getExplanation(), quiz.getAlgorithm(),
-                quiz.getTimeComplexity(), quiz.getSpaceComplexity(), quiz.getCommonMistakes());
+                quiz.getEstimatedLevel(), quiz.getTimeComplexity(), quiz.getSpaceComplexity(),
+                quiz.getRequiredTechniques(), quiz.getCommonMistakes());
     }
 
     private BlankQuizInfo generateParallelPipeline(ProblemInfo problem) {
@@ -228,6 +236,54 @@ public class QuizService {
                 || problem.getTestcases() == null || problem.getTestcases().size() < 2) {
             throw new QuizGenerationException("AI가 유효한 문제 또는 테스트케이스를 생성하지 못했습니다.");
         }
+    }
+
+    private void validateDifficultyMetadata(ProblemInfo problem, String category, String difficulty) {
+        if (isBlank(problem.getAlgorithm()) || isBlank(problem.getEstimatedLevel())
+                || isBlank(problem.getTimeComplexity()) || isBlank(problem.getSpaceComplexity())
+                || problem.getRequiredTechniques() == null) {
+            throw new QuizGenerationException("AI가 난이도 메타데이터를 완성하지 못했습니다.");
+        }
+        if (!problem.getEstimatedLevel().strip().toLowerCase(Locale.ROOT).startsWith("프로그래머스")) {
+            throw new QuizGenerationException("난이도 메타데이터에는 프로그래머스 레벨을 명시해야 합니다.");
+        }
+        if (!"전체".equals(category) && !sameAlgorithm(category, problem.getAlgorithm())) {
+            throw new QuizGenerationException("요청한 카테고리와 다른 알고리즘이 생성되었습니다.");
+        }
+        Matcher matcher = LEVEL_PATTERN.matcher(problem.getEstimatedLevel());
+        if (!matcher.find()) throw new QuizGenerationException("프로그래머스 레벨 형식이 올바르지 않습니다.");
+        int level = Integer.parseInt(matcher.group(1));
+        int[] range = switch (difficulty) {
+            case "쉬움" -> new int[]{1, 2};
+            case "보통" -> new int[]{2, 3};
+            case "어려움" -> new int[]{3, 4};
+            default -> throw new IllegalArgumentException("지원하지 않는 문제 난이도입니다.");
+        };
+        if (level < range[0] || level > range[1]) {
+            throw new QuizGenerationException("요청한 난이도 범위를 벗어난 문제가 생성되었습니다.");
+        }
+        if ("어려움".equals(difficulty) && problem.getRequiredTechniques().isEmpty()) {
+            throw new QuizGenerationException("어려움 문제에 필요한 알고리즘 기법이 없습니다.");
+        }
+    }
+
+    private boolean sameAlgorithm(String requested, String generated) {
+        return canonicalAlgorithm(requested).equals(canonicalAlgorithm(generated));
+    }
+
+    private String canonicalAlgorithm(String value) {
+        String normalized = value.strip().toLowerCase(Locale.ROOT).replace(" ", "");
+        return switch (normalized) {
+            case "동적계획법", "dynamicprogramming" -> "dp";
+            case "너비우선탐색", "breadthfirstsearch" -> "bfs";
+            case "깊이우선탐색", "depthfirstsearch" -> "dfs";
+            case "탐욕법", "greedyalgorithm" -> "greedy";
+            default -> normalized;
+        };
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
 }

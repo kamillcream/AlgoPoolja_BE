@@ -19,15 +19,17 @@ public class QuizSnapshot {
     private String hint;
     private String explanation;
     private String algorithm;
+    private String estimatedLevel;
     private String timeComplexity;
     private String spaceComplexity;
+    private List<String> requiredTechniques;
     private List<String> commonMistakes;
 
     public QuizSnapshot(Long quizId, String title, String description, String category, String difficulty,
                         List<TestCase> testcases, String answerCode, String blankCode,
                         List<String> correctAnswers, List<String> answerBlocks) {
         this(quizId, "PYTHON", title, description, category, difficulty, testcases, answerCode, blankCode,
-                correctAnswers, answerBlocks, null, null, null, null, null, List.of());
+                correctAnswers, answerBlocks, null, null, null, null, null, null, List.of(), List.of());
     }
 
     public QuizSnapshot(Long quizId, String title, String description, String category, String difficulty,
@@ -36,8 +38,8 @@ public class QuizSnapshot {
                         String algorithm, String timeComplexity, String spaceComplexity,
                         List<String> commonMistakes) {
         this(quizId, "PYTHON", title, description, category, difficulty, testcases, answerCode, blankCode,
-                correctAnswers, answerBlocks, hint, explanation, algorithm, timeComplexity,
-                spaceComplexity, commonMistakes);
+                correctAnswers, answerBlocks, hint, explanation, algorithm, null, timeComplexity,
+                spaceComplexity, List.of(), commonMistakes);
     }
 
     public QuizSnapshot(Long quizId, String language, String title, String description, String category,
@@ -45,6 +47,16 @@ public class QuizSnapshot {
                         List<String> correctAnswers, List<String> answerBlocks, String hint, String explanation,
                         String algorithm, String timeComplexity, String spaceComplexity,
                         List<String> commonMistakes) {
+        this(quizId, language, title, description, category, difficulty, testcases, answerCode, blankCode,
+                correctAnswers, answerBlocks, hint, explanation, algorithm, null, timeComplexity,
+                spaceComplexity, List.of(), commonMistakes);
+    }
+
+    public QuizSnapshot(Long quizId, String language, String title, String description, String category,
+                        String difficulty, List<TestCase> testcases, String answerCode, String blankCode,
+                        List<String> correctAnswers, List<String> answerBlocks, String hint, String explanation,
+                        String algorithm, String estimatedLevel, String timeComplexity, String spaceComplexity,
+                        List<String> requiredTechniques, List<String> commonMistakes) {
         this.quizId = quizId;
         this.language = language;
         this.title = title;
@@ -59,8 +71,10 @@ public class QuizSnapshot {
         this.hint = hint;
         this.explanation = explanation;
         this.algorithm = algorithm;
+        this.estimatedLevel = estimatedLevel;
         this.timeComplexity = timeComplexity;
         this.spaceComplexity = spaceComplexity;
+        this.requiredTechniques = requiredTechniques;
         this.commonMistakes = commonMistakes;
     }
 }
