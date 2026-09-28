@@ -40,6 +40,6 @@ public class FullQuizInfo {
     public FullQuizInfo(String title, String description, List<TestCase> testcases, String code,
                         String blankCode, List<String> correctAnswers, List<String> wrongAnswers) {
         this(title, description, testcases, code, blankCode, correctAnswers, wrongAnswers,
-                null, null, null, null, List.of(), List.of());
+                null, null, null, null, null, null, List.of(), List.of());
     }
 }

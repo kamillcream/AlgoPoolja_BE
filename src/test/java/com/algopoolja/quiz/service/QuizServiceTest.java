@@ -96,13 +96,14 @@ class QuizServiceTest {
                 return new ProblemInfo("합", "두 수의 합", List.of(
                         new TestCase("1 2", "3"), new TestCase("2 3", "5")),
                         "def solution(a, b):\n    return a + b",
-                        new DifficultyMetadata("Greedy", "Lv.3", "O(N)", "O(1)", List.of("정렬")));
+                        new DifficultyMetadata("Greedy", "프로그래머스 Lv.3", "O(N)", "O(1)", List.of("정렬")));
             }
             public String createBlankCode(String code) { throw new AssertionError("검증 실패 전에 빈칸 생성을 호출하면 안 됩니다."); }
             public AnswerBlockInfo createAnswerBlocks(String a, String b) { throw new AssertionError(); }
         };
 
-        QuizService service = new QuizService(fake, new QuizTools());
+        QuizService service = new QuizService(fake, new QuizTools(),
+                new InMemoryLearningStore(), new InMemoryQuizStore());
 
         assertThatThrownBy(() -> service.generate("DP", "어려움"))
                 .isInstanceOf(QuizGenerationException.class)

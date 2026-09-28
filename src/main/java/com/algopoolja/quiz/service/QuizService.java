@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,6 +58,7 @@ public class QuizService {
         if (!CATEGORIES.contains(category)) throw new IllegalArgumentException("지원하지 않는 문제 유형입니다.");
         if (!DIFFICULTIES.contains(difficulty)) throw new IllegalArgumentException("지원하지 않는 문제 난이도입니다.");
         language = normalizeLanguage(language);
+        final String generationLanguage = language;
 
         String normalizedCategory = normalizeCategory(category);
         if (user != null) {
@@ -81,10 +83,12 @@ public class QuizService {
             problem = fullQuiz.problem();
             blankQuiz = fullQuiz.blankQuiz();
         } else if ("parallel-pipeline".equalsIgnoreCase(generationStrategy)) {
-            problem = generator.createProblem(category, difficulty, language);
+            problem = generateValidatedProblem(category, difficulty,
+                    () -> generator.createProblem(category, difficulty, generationLanguage));
             blankQuiz = generateParallelPipeline(problem);
         } else {
-            problem = generator.createProblem(category, difficulty, language);
+            problem = generateValidatedProblem(category, difficulty,
+                    () -> generator.createProblem(category, difficulty, generationLanguage));
             blankQuiz = "legacy".equalsIgnoreCase(generationStrategy)
                     ? new BlankQuizInfo(generator.createBlankCode(problem.getCode()), null, null)
                     : generator.createBlankQuiz(problem.getCode());
@@ -265,6 +269,24 @@ public class QuizService {
         if ("어려움".equals(difficulty) && problem.getRequiredTechniques().isEmpty()) {
             throw new QuizGenerationException("어려움 문제에 필요한 알고리즘 기법이 없습니다.");
         }
+    }
+
+    private ProblemInfo generateValidatedProblem(String category, String difficulty,
+                                                 Supplier<ProblemInfo> generatorCall) {
+        QuizGenerationException lastFailure = null;
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            ProblemInfo problem = generatorCall.get();
+            try {
+                requireValidProblem(problem);
+                validateDifficultyMetadata(problem, category, difficulty);
+                return problem;
+            }
+            catch (QuizGenerationException failure) {
+                lastFailure = failure;
+                log.warn("Rejected generated problem: attempt={}, reason={}", attempt, failure.getMessage());
+            }
+        }
+        throw new QuizGenerationException("요청한 카테고리와 난이도에 맞는 문제를 생성하지 못했습니다. 다시 시도해주세요.", lastFailure);
     }
 
     private boolean sameAlgorithm(String requested, String generated) {

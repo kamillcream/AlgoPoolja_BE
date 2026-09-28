@@ -70,7 +70,7 @@ public class QuizEntity {
                       String spaceComplexity, List<String> commonMistakes) {
         this(title, description, category, difficulty, "PYTHON", answerCode, blankCode, correctAnswers,
                 answerBlocks, contentHash, createdBy, hint, explanation, algorithm, timeComplexity,
-                spaceComplexity, commonMistakes, null, List.of());
+                spaceComplexity, commonMistakes);
     }
 
     public QuizEntity(String title, String description, String category, String difficulty, String language,
