@@ -43,8 +43,10 @@ public final class QuizDtos {
         private String hint;
         private String explanation;
         private String algorithm;
+        private String estimatedLevel;
         private String timeComplexity;
         private String spaceComplexity;
+        private List<String> requiredTechniques;
         private List<String> commonMistakes;
     }
 
@@ -67,8 +69,10 @@ public final class QuizDtos {
         private String hint;
         private String explanation;
         private String algorithm;
+        private String estimatedLevel;
         private String timeComplexity;
         private String spaceComplexity;
+        private List<String> requiredTechniques;
         private List<String> commonMistakes;
     }
 

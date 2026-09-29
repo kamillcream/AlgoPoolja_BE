@@ -45,6 +45,7 @@ public class QuizController {
         return new QuizDetailResponse(quiz.getQuizId(), quiz.getLanguage(), quiz.getTitle(), quiz.getDescription(), quiz.getCategory(),
                 quiz.getDifficulty(), quiz.getTestcases(), quiz.getBlankCode(), quiz.getAnswerBlocks(),
                 quiz.getCorrectAnswers().size(), quiz.getAnswerCode(), quiz.getHint(), quiz.getExplanation(), quiz.getAlgorithm(),
-                quiz.getTimeComplexity(), quiz.getSpaceComplexity(), quiz.getCommonMistakes());
+                quiz.getEstimatedLevel(), quiz.getTimeComplexity(), quiz.getSpaceComplexity(),
+                quiz.getRequiredTechniques(), quiz.getCommonMistakes());
     }
 }

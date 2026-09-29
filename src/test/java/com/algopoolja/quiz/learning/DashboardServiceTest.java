@@ -3,6 +3,7 @@ package com.algopoolja.quiz.learning;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.algopoolja.quiz.domain.AnswerBlockInfo;
+import com.algopoolja.quiz.domain.DifficultyMetadata;
 import com.algopoolja.quiz.domain.ProblemInfo;
 import com.algopoolja.quiz.domain.TestCase;
 import com.algopoolja.quiz.service.AiQuizGenerator;
@@ -53,7 +54,8 @@ class DashboardServiceTest {
             public ProblemInfo createProblem(String category, String difficulty) {
                 return new ProblemInfo("최소 동전 조합", "설명", List.of(
                         new TestCase("1", "1"), new TestCase("2", "2")),
-                        "def solution(a, b):\n    return a + b + 0");
+                        "def solution(a, b):\n    return a + b + 0",
+                        new DifficultyMetadata("DP", "프로그래머스 Lv.3", "O(N)", "O(N)", List.of("동적 계획법")));
             }
             public String createBlankCode(String code) { return "def solution(a, b):\n    return <BLANK> + <BLANK> + <BLANK>"; }
             public AnswerBlockInfo createAnswerBlocks(String answer, String blank) {

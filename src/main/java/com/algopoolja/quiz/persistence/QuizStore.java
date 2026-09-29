@@ -26,6 +26,17 @@ public interface QuizStore {
                 commonMistakes);
     }
 
+    default Long save(String title, String description, String category, String difficulty,
+                      String language, String answerCode, String blankCode, List<String> correctAnswers,
+                      List<String> answerBlocks, List<TestCase> testCases, String hint,
+                      String explanation, String algorithm, String estimatedLevel,
+                      String timeComplexity, String spaceComplexity,
+                      List<String> requiredTechniques, List<String> commonMistakes) {
+        return save(title, description, category, difficulty, language, answerCode, blankCode, correctAnswers,
+                answerBlocks, testCases, hint, explanation, algorithm, timeComplexity, spaceComplexity,
+                commonMistakes);
+    }
+
     Optional<QuizSnapshot> findById(Long quizId);
 
     default List<QuizSnapshot> findByCategoryDifficultyAndLanguage(String category, String difficulty,
