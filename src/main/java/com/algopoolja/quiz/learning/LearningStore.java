@@ -9,5 +9,7 @@ public interface LearningStore {
 
     List<QuizAttempt> findAttempts(Long userId);
 
+    List<QuizAttempt> findAttemptsBetween(OffsetDateTime from, OffsetDateTime to);
+
     UserIdentity findUser(Long userId);
 }

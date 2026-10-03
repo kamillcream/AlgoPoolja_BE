@@ -89,6 +89,17 @@ public final class DashboardDtos {
     }
 
     @Value
+    public static class RankingView {
+        int rank;
+        Long userId;
+        String nickname;
+        long solvedCount;
+        long correctCount;
+        double accuracyRate;
+        String badge;
+    }
+
+    @Value
     public static class DashboardResponse {
         UserView user;
         PeriodView period;
@@ -96,6 +107,8 @@ public final class DashboardDtos {
         List<CategoryStatView> categoryStats;
         List<SummaryWrongQuizView> wrongQuizzes;
         List<RecentAttemptView> recentAttempts;
+        List<RankingView> weeklyRankings;
+        RankingView myWeeklyRanking;
     }
 
     @Value

@@ -29,5 +29,12 @@ public class InMemoryLearningStore implements LearningStore {
     }
 
     @Override
+    public List<QuizAttempt> findAttemptsBetween(OffsetDateTime from, OffsetDateTime to) {
+        return attempts.stream()
+                .filter(a -> !a.getAttemptedAt().isBefore(from) && a.getAttemptedAt().isBefore(to))
+                .sorted(Comparator.comparing(QuizAttempt::getAttemptedAt).reversed()).toList();
+    }
+
+    @Override
     public UserIdentity findUser(Long userId) { return users.get(userId); }
 }

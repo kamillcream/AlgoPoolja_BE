@@ -48,6 +48,14 @@ public class JpaLearningStore implements LearningStore {
 
     @Override
     @Transactional(readOnly = true)
+    public List<QuizAttempt> findAttemptsBetween(OffsetDateTime from, OffsetDateTime to) {
+        return attemptRepository
+                .findAllBySubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderBySubmittedAtDesc(from, to)
+                .stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public UserIdentity findUser(Long userId) {
         return userRepository.findById(userId)
                 .map(user -> new UserIdentity(user.getId(), user.getNickname()))

@@ -36,6 +36,7 @@ public class DashboardService {
         List<QuizAttempt> selected = all.stream().filter(range::contains).toList();
         List<QuizAttempt> previous = all.stream().filter(range::containsPrevious).toList();
 
+        WeeklyRankingResult ranking = weeklyRankings(user, zone, 10);
         return new DashboardResponse(
                 new UserView(user.getUserId(), user.getNickname()),
                 new PeriodView(periodType, range.getFrom(), range.getTo(), zone.getId()),
@@ -43,7 +44,8 @@ public class DashboardService {
                 categoryStats(selected),
                 wrongQuizzes(all, "unresolved", null, null).stream().limit(wrongLimit)
                         .map(this::summaryWrongQuizView).toList(),
-                selected.stream().limit(recentLimit).map(this::recentAttemptView).toList());
+                selected.stream().limit(recentLimit).map(this::recentAttemptView).toList(),
+                ranking.rankings(), ranking.myRanking());
     }
 
     public PageResponse<AttemptView> attempts(UserIdentity user, int page, int size, String result,
@@ -148,6 +150,54 @@ public class DashboardService {
                 view.getAttemptedAt());
     }
 
+    private WeeklyRankingResult weeklyRankings(UserIdentity currentUser, ZoneId zone, int limit) {
+        LocalDate today = LocalDate.now(zone);
+        OffsetDateTime from = today.minusDays(6).atStartOfDay(zone).toOffsetDateTime();
+        OffsetDateTime to = today.plusDays(1).atStartOfDay(zone).toOffsetDateTime();
+        List<QuizAttempt> attempts = store.findAttemptsBetween(from, to);
+        Map<Long, List<QuizAttempt>> grouped = attempts.stream()
+                .collect(Collectors.groupingBy(QuizAttempt::getUserId));
+
+        Comparator<RankingAggregate> rankingOrder = Comparator
+                .comparingLong(RankingAggregate::solvedCount).reversed()
+                .thenComparing(Comparator.comparingDouble(RankingAggregate::accuracyRate).reversed())
+                .thenComparing(Comparator.comparingLong(RankingAggregate::correctCount).reversed())
+                .thenComparing(RankingAggregate::latestAttemptedAt);
+        List<RankingAggregate> aggregates = grouped.entrySet().stream()
+                .map(entry -> new RankingAggregate(entry.getKey(), entry.getValue()))
+                .sorted(rankingOrder)
+                .toList();
+
+        Map<Long, Integer> ranks = new LinkedHashMap<>();
+        for (int index = 0; index < aggregates.size(); index++) {
+            ranks.put(aggregates.get(index).userId(), index + 1);
+        }
+        List<RankingView> topRankings = aggregates.stream().limit(limit)
+                .map(aggregate -> rankingView(aggregate, ranks.get(aggregate.userId())))
+                .toList();
+        RankingView myRanking = aggregates.stream()
+                .filter(aggregate -> aggregate.userId().equals(currentUser.getUserId()))
+                .findFirst()
+                .map(aggregate -> rankingView(aggregate, ranks.get(aggregate.userId())))
+                .orElse(null);
+        return new WeeklyRankingResult(topRankings, myRanking);
+    }
+
+    private RankingView rankingView(RankingAggregate aggregate, int rank) {
+        UserIdentity user = store.findUser(aggregate.userId());
+        return new RankingView(rank, aggregate.userId(), user == null ? "알 수 없는 사용자" : user.getNickname(),
+                aggregate.solvedCount(), aggregate.correctCount(), aggregate.accuracyRate(), badge(rank));
+    }
+
+    private String badge(int rank) {
+        return switch (rank) {
+            case 1 -> "GOLD";
+            case 2 -> "SILVER";
+            case 3 -> "BRONZE";
+            default -> rank <= 10 ? "TOP_10" : "NONE";
+        };
+    }
+
     private SummaryWrongQuizView summaryWrongQuizView(WrongQuizView view) {
         return new SummaryWrongQuizView(view.getQuizId(), view.getTitle(), view.getCategory(), view.getDifficulty(),
                 view.getWrongAttemptCount(), view.getLastAttemptedAt(), view.getNextReviewAt());
@@ -202,6 +252,39 @@ public class DashboardService {
 
     private String label(String category) {
         return category.substring(0, 1) + category.substring(1).toLowerCase();
+    }
+
+    private static class RankingAggregate {
+        private final Long userId;
+        private final List<QuizAttempt> attempts;
+
+        private RankingAggregate(Long userId, List<QuizAttempt> attempts) {
+            this.userId = userId;
+            this.attempts = attempts;
+        }
+
+        private Long userId() { return userId; }
+
+        private long solvedCount() {
+            return attempts.stream().filter(QuizAttempt::isCorrect)
+                    .map(QuizAttempt::getQuizId).distinct().count();
+        }
+
+        private long correctCount() {
+            return attempts.stream().filter(QuizAttempt::isCorrect).count();
+        }
+
+        private double accuracyRate() {
+            return attempts.isEmpty() ? 0.0 : correctCount() * 100.0 / attempts.size();
+        }
+
+        private OffsetDateTime latestAttemptedAt() {
+            return attempts.stream().map(QuizAttempt::getAttemptedAt)
+                    .max(Comparator.naturalOrder()).orElse(OffsetDateTime.MIN);
+        }
+    }
+
+    private record WeeklyRankingResult(List<RankingView> rankings, RankingView myRanking) {
     }
 
     private PeriodRange period(String type, ZoneId zone) {

@@ -10,4 +10,8 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttemptEntity, 
 
     @EntityGraph(attributePaths = {"user", "quiz"})
     List<QuizAttemptEntity> findAllByUserIdOrderBySubmittedAtDesc(Long userId);
+
+    @EntityGraph(attributePaths = {"user", "quiz"})
+    List<QuizAttemptEntity> findAllBySubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderBySubmittedAtDesc(
+            java.time.OffsetDateTime from, java.time.OffsetDateTime to);
 }
