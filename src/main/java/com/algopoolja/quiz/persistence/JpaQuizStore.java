@@ -81,6 +81,12 @@ public class JpaQuizStore implements QuizStore {
 
     @Override
     @Transactional(readOnly = true)
+    public List<QuizSnapshot> findAll() {
+        return quizRepository.findAllByOrderByCreatedAtAsc().stream().map(this::toSnapshot).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<QuizSnapshot> findByCategoryDifficultyAndLanguage(String category, String difficulty,
                                                                    String language) {
         return quizRepository.findByCategoryAndDifficultyAndLanguageOrderByCreatedAtAsc(category, difficulty, language)

@@ -31,6 +31,9 @@ public class InMemoryQuizStore implements QuizStore {
     public Optional<QuizSnapshot> findById(Long quizId) { return Optional.ofNullable(quizzes.get(quizId)); }
 
     @Override
+    public List<QuizSnapshot> findAll() { return List.copyOf(quizzes.values()); }
+
+    @Override
     public List<QuizSnapshot> findByCategoryDifficultyAndLanguage(String category, String difficulty,
                                                                     String language) {
         return quizzes.values().stream()

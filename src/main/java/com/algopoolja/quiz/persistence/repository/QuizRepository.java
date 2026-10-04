@@ -13,6 +13,9 @@ public interface QuizRepository extends JpaRepository<QuizEntity, Long> {
     List<QuizEntity> findByCategoryAndDifficultyAndLanguageOrderByCreatedAtAsc(
             String category, String difficulty, String language);
 
+    @EntityGraph(attributePaths = "testCases")
+    List<QuizEntity> findAllByOrderByCreatedAtAsc();
+
     @Override
     @EntityGraph(attributePaths = "testCases")
     Optional<QuizEntity> findById(Long id);

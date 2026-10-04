@@ -225,6 +225,19 @@ public class QuizService {
         return quizStore.findById(id).orElseThrow(QuizNotFoundException::new);
     }
 
+    public QuizSnapshot getRandomQuiz(UserIdentity user) {
+        List<QuizSnapshot> quizzes = quizStore.findAll();
+        if (quizzes.isEmpty()) throw new QuizNotFoundException();
+        Set<Long> attemptedQuizIds = learningStore.findAttempts(user.getUserId()).stream()
+                .map(com.algopoolja.quiz.learning.QuizAttempt::getQuizId)
+                .collect(java.util.stream.Collectors.toSet());
+        List<QuizSnapshot> unattempted = quizzes.stream()
+                .filter(quiz -> !attemptedQuizIds.contains(quiz.getQuizId()))
+                .toList();
+        List<QuizSnapshot> candidates = unattempted.isEmpty() ? quizzes : unattempted;
+        return candidates.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(candidates.size()));
+    }
+
     private String normalizeCategory(String value) {
         return "전체".equals(value) ? "ETC" : value.toUpperCase();
     }

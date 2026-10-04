@@ -41,7 +41,15 @@ public class QuizController {
 
     @GetMapping("/{quizId}")
     public QuizDetailResponse getQuiz(@PathVariable Long quizId) {
-        QuizSnapshot quiz = service.getQuiz(quizId);
+        return toDetailResponse(service.getQuiz(quizId));
+    }
+
+    @GetMapping("/random")
+    public QuizDetailResponse getRandomQuiz(HttpServletRequest servletRequest) {
+        return toDetailResponse(service.getRandomQuiz(currentUserProvider.requireCurrentUser(servletRequest)));
+    }
+
+    private QuizDetailResponse toDetailResponse(QuizSnapshot quiz) {
         return new QuizDetailResponse(quiz.getQuizId(), quiz.getLanguage(), quiz.getTitle(), quiz.getDescription(), quiz.getCategory(),
                 quiz.getDifficulty(), quiz.getTestcases(), quiz.getBlankCode(), quiz.getAnswerBlocks(),
                 quiz.getCorrectAnswers().size(), quiz.getAnswerCode(), quiz.getHint(), quiz.getExplanation(), quiz.getAlgorithm(),
