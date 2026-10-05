@@ -77,6 +77,20 @@ public final class QuizDtos {
     }
 
     @Getter
+    @AllArgsConstructor
+    public static class QuizPreviewResponse {
+        private Long quizId;
+        private String language;
+        private String title;
+        private String description;
+        private String category;
+        private String difficulty;
+        private List<TestCase> testcases;
+        private String blankCode;
+        private int blankCount;
+    }
+
+    @Getter
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor

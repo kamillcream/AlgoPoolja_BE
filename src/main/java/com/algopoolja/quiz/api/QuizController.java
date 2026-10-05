@@ -5,6 +5,7 @@ import com.algopoolja.quiz.api.QuizDtos.CheckResponse;
 import com.algopoolja.quiz.api.QuizDtos.GenerateRequest;
 import com.algopoolja.quiz.api.QuizDtos.GenerateResponse;
 import com.algopoolja.quiz.api.QuizDtos.QuizDetailResponse;
+import com.algopoolja.quiz.api.QuizDtos.QuizPreviewResponse;
 import com.algopoolja.quiz.service.QuizService;
 import com.algopoolja.quiz.auth.CurrentUserProvider;
 import com.algopoolja.quiz.domain.QuizSnapshot;
@@ -47,6 +48,14 @@ public class QuizController {
     @GetMapping("/random")
     public QuizDetailResponse getRandomQuiz(HttpServletRequest servletRequest) {
         return toDetailResponse(service.getRandomQuiz(currentUserProvider.requireCurrentUser(servletRequest)));
+    }
+
+    @GetMapping("/preview/random")
+    public QuizPreviewResponse getRandomPreview() {
+        QuizSnapshot quiz = service.getRandomQuiz(null);
+        return new QuizPreviewResponse(quiz.getQuizId(), quiz.getLanguage(), quiz.getTitle(),
+                quiz.getDescription(), quiz.getCategory(), quiz.getDifficulty(), quiz.getTestcases(),
+                quiz.getBlankCode(), quiz.getCorrectAnswers().size());
     }
 
     private QuizDetailResponse toDetailResponse(QuizSnapshot quiz) {

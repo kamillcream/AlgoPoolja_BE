@@ -228,7 +228,7 @@ public class QuizService {
     public QuizSnapshot getRandomQuiz(UserIdentity user) {
         List<QuizSnapshot> quizzes = quizStore.findAll();
         if (quizzes.isEmpty()) throw new QuizNotFoundException();
-        Set<Long> attemptedQuizIds = learningStore.findAttempts(user.getUserId()).stream()
+        Set<Long> attemptedQuizIds = user == null ? Set.of() : learningStore.findAttempts(user.getUserId()).stream()
                 .map(com.algopoolja.quiz.learning.QuizAttempt::getQuizId)
                 .collect(java.util.stream.Collectors.toSet());
         List<QuizSnapshot> unattempted = quizzes.stream()
